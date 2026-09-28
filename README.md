@@ -2,9 +2,9 @@
 
 Microservicio backend RESTful desarrollado en **Node.js** y **Express**, encargado de la gestión, consulta, búsqueda avanzada y vista de detalle de eventos, conectado a base de datos PostgreSQL alojada en **Supabase**.
 
-> 📚 **Documentación General y Contratos:**  
+> **Documentación General y Contratos:**  
 > Los contratos de interfaz interservicios, diagramas de secuencia e hitos de planificación se encuentran en el repositorio principal:  
-> 👉 **[Equipo-7-Catalogo-de-eventos / Catalogo_de_eventos](https://github.com/Equipo-7-Catalogo-de-eventos/Catalogo_de_eventos)**
+> **[Equipo-7-Catalogo-de-eventos / Catalogo_de_eventos](https://github.com/Equipo-7-Catalogo-de-eventos/Catalogo_de_eventos)**
 
 ---
 
