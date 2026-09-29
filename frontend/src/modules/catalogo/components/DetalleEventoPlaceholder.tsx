@@ -114,6 +114,45 @@ export default async function DetalleEventoPlaceholder({
                             evento.evento_categoria.slice(1)}
                     </span>
                 )}
+
+                {/* Resumen de calificación */}
+                {evento.resena_total > 0 ? (
+                    <div
+                        className={styles.calificacionDetalle}
+                        role="img"
+                        aria-label={`Calificación ${evento.resena_calificacion_promedio.toFixed(1)} de 5, basada en ${evento.resena_total} ${evento.resena_total === 1 ? "reseña" : "reseñas"}`}
+                    >
+                        <span className={styles.estrellasContenedor}>
+                            {[1, 2, 3, 4, 5].map((i) => {
+                                const rellena = i <= Math.round(evento.resena_calificacion_promedio);
+                                return (
+                                    <svg
+                                        key={i}
+                                        width="20"
+                                        height="20"
+                                        viewBox="0 0 24 24"
+                                        fill={rellena ? "var(--color-primario)" : "none"}
+                                        stroke="var(--color-primario)"
+                                        strokeWidth="2"
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        aria-hidden="true"
+                                    >
+                                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                                    </svg>
+                                );
+                            })}
+                        </span>
+                        <span className={styles.calificacionPromedio}>
+                            {evento.resena_calificacion_promedio.toFixed(1)}
+                        </span>
+                        <span className={styles.calificacionTotal}>
+                            ({evento.resena_total} {evento.resena_total === 1 ? "reseña" : "reseñas"})
+                        </span>
+                    </div>
+                ) : (
+                    <span className={styles.sinCalificaciones}>Sin calificaciones aún</span>
+                )}
             </div>
 
             {/* d. Recuadro de información */}

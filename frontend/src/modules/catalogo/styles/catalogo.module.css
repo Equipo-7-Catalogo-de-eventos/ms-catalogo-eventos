@@ -813,3 +813,38 @@
     outline: 2px solid var(--color-primario);
     outline-offset: 2px;
 }
+
+/* Calificación en Detalle */
+.calificacionDetalle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.estrellasContenedor {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+}
+
+.calificacionPromedio {
+    font-family: var(--font-familia-cuerpo);
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--color-primario);
+}
+
+.calificacionTotal {
+    font-family: var(--font-familia-cuerpo);
+    font-size: 14px;
+    font-weight: 400;
+    color: var(--color-secundario);
+}
+
+.sinCalificaciones {
+    font-family: var(--font-familia-cuerpo);
+    font-size: 12px;
+    line-height: 1.5;
+    color: var(--color-secundario);
+}
