@@ -16,12 +16,12 @@
 // ============================================================================
 
 import Link from "next/link";
-import { obtenerEventoPorId } from "../api";
+import { obtenerEventoPorId, obtenerResenasEvento } from "../api";
 import type { Evento } from "../types";
-import { formatearFechaLarga, formatearPrecio } from "../formato";
+import { formatearFechaLarga, formatearPrecio, formatearNumero } from "../formato";
 import ImagenEvento from "./ImagenEvento";
-import DisponibilidadPlaceholder from "@/modules/entradas/components/DisponibilidadPlaceholder";
-import PromocionPlaceholder from "@/modules/promociones/components/PromocionPlaceholder";
+import Estrellas from "./Estrellas";
+import ResumenResenas from "./ResumenResenas";
 import { poppins, inter } from "../styles/fonts";
 import styles from "../styles/catalogo.module.css";
 
@@ -31,9 +31,13 @@ export default async function DetalleEventoPlaceholder({
     eventoId: string;
 }) {
     let evento: Evento;
+    let resumenResenas;
 
     try {
-        evento = await obtenerEventoPorId(eventoId);
+        [evento, resumenResenas] = await Promise.all([
+            obtenerEventoPorId(eventoId),
+            obtenerResenasEvento(eventoId)
+        ]);
     } catch (error) {
         console.error("Error en detalle:", error);
         return (
@@ -123,25 +127,7 @@ export default async function DetalleEventoPlaceholder({
                         aria-label={`Calificación ${evento.resena_calificacion_promedio.toFixed(1)} de 5, basada en ${evento.resena_total} ${evento.resena_total === 1 ? "reseña" : "reseñas"}`}
                     >
                         <span className={styles.estrellasContenedor}>
-                            {[1, 2, 3, 4, 5].map((i) => {
-                                const rellena = i <= Math.round(evento.resena_calificacion_promedio);
-                                return (
-                                    <svg
-                                        key={i}
-                                        width="20"
-                                        height="20"
-                                        viewBox="0 0 24 24"
-                                        fill={rellena ? "var(--color-primario)" : "none"}
-                                        stroke="var(--color-primario)"
-                                        strokeWidth="2"
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        aria-hidden="true"
-                                    >
-                                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-                                    </svg>
-                                );
-                            })}
+                            <Estrellas valor={evento.resena_calificacion_promedio} tamano={20} />
                         </span>
                         <span className={styles.calificacionPromedio}>
                             {evento.resena_calificacion_promedio.toFixed(1)}
@@ -256,14 +242,40 @@ export default async function DetalleEventoPlaceholder({
                             {precioTexto}
                         </dd>
                     </div>
+
+                    {evento.evento_estado !== "pasado" && (
+                        <div className={styles.filaDato}>
+                            <span className={styles.iconoDato}>
+                                <svg
+                                    width="20"
+                                    height="20"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="2"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    aria-hidden="true"
+                                >
+                                    <path d="M15 5v2" />
+                                    <path d="M15 11v2" />
+                                    <path d="M15 17v2" />
+                                    <path d="M5 5h14a2 2 0 0 1 2 2v3a2 2 0 0 0 0 4v3a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-3a2 2 0 0 0 0-4V7a2 2 0 0 1 2-2z" />
+                                </svg>
+                            </span>
+                            <dt className={styles.etiquetaDato}>Entradas disponibles:</dt>
+                            <dd
+                                className={`${styles.valorDato} ${
+                                    evento.inventario_stock === 0 ? styles.badgeAgotado : ""
+                                }`}
+                                style={evento.inventario_stock === 0 ? { color: "var(--color-peligro-texto)", fontWeight: 600 } : {}}
+                            >
+                                {evento.inventario_stock === 0 ? "Agotadas" : formatearNumero(evento.inventario_stock)}
+                            </dd>
+                        </div>
+                    )}
                 </dl>
             </section>
-
-            {/* e. Bloques de otros grupos */}
-            <div className={styles.bloquesOtrosGrupos}>
-                <DisponibilidadPlaceholder eventoId={eventoId} />
-                <PromocionPlaceholder eventoId={eventoId} />
-            </div>
 
             {/* El bloque de Reseñas NO se importa acá: vive en su propia ruta
           anidada /catalogo/[eventoId]/resenas (Grupo 6), no como componente
@@ -298,6 +310,16 @@ export default async function DetalleEventoPlaceholder({
                     </>
                 )}
             </section>
+
+            {/* g. Resumen de reseñas (HU6) */}
+            <div style={{ marginTop: 48, marginBottom: 48 }}>
+                <ResumenResenas 
+                    resumen={resumenResenas} 
+                    eventoId={eventoId} 
+                    imagenEvento={evento.evento_imagen} 
+                    tituloEvento={evento.evento_titulo} 
+                />
+            </div>
         </div>
     );
 }

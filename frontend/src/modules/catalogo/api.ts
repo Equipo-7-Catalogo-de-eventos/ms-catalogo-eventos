@@ -4,11 +4,15 @@
 // ============================================================================
 
 import { GATEWAY_URL } from "@/lib/env";
-import type { Evento, FiltrosEventos, RespuestaLista, RespuestaDetalle } from "./types";
+import type { Evento, FiltrosEventos, RespuestaLista, RespuestaDetalle, ResumenResenas, RespuestaResenas } from "./types";
 import { eventosPrueba } from "./datosPrueba";
+import resenasPrueba from "./resenasPrueba.json";
 
 // Cambiar a false cuando el backend esté funcionando.
 const USAR_DATOS_PRUEBA = false;
+
+// Simulación de la integración con Reseñas (Grupo 6).
+const USAR_DATOS_PRUEBA_RESENAS = true;
 
 // TODO: el repo común usa "/api/catalogo/eventos" vía Gateway. Confirmar path final.
 const BASE_PATH = "/api/v1/events";
@@ -49,4 +53,29 @@ export async function obtenerEventoPorId(eventoId: string): Promise<Evento> {
     if (!res.ok) throw new Error("Error al obtener el evento del catálogo");
     const json: RespuestaDetalle = await res.json();
     return json.data;
+}
+
+export async function obtenerResenasEvento(eventoId: string, limite = 3): Promise<ResumenResenas> {
+    try {
+        if (USAR_DATOS_PRUEBA_RESENAS) {
+            await esperar(300);
+            const data = (resenasPrueba as Record<string, ResumenResenas>)[eventoId];
+            if (!data) {
+                return { id_evento: eventoId, promedio: null, total_resenas: 0, resenas: [] };
+            }
+            return {
+                ...data,
+                resenas: data.resenas.slice(0, limite)
+            };
+        }
+
+        // TODO: endpoint propuesto del backend de Catálogo, que por dentro invoca a Reseñas.
+        const res = await fetch(`${GATEWAY_URL}${BASE_PATH}/${encodeURIComponent(eventoId)}/resenas?limite=${limite}`, { cache: "no-store" });
+        if (!res.ok) throw new Error("Error al obtener reseñas del evento");
+        const json: RespuestaResenas = await res.json();
+        return json.data;
+    } catch (error) {
+        console.error("Error al obtener reseñas:", error);
+        return { id_evento: eventoId, promedio: null, total_resenas: 0, resenas: [] };
+    }
 }
