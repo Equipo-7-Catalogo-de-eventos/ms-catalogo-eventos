@@ -1,3 +1,15 @@
+## Asignación de Responsables por Rol
+
+| Rol | Ítems de la rúbrica | Responsable(s) |
+| :--- | :--- | :--- |
+| **Back End** | BE1, BE2, BE3 | Maximiliano Rozas[cite: 1] |
+| **Base de Datos** | BD1, BD2, BD3, BD4 | Anais Muñoz[cite: 1] |
+| **UI/UX (front end)** | UI1, UI2, UI3 | Amalia Catalina Toledo[cite: 1] |
+| **Gestión** | GE1, GE2, GE3, GE4 | Gladys Carvacho y Diego Valenzuela[cite: 1, 5] |
+| **Calidad** | CA1, CA2 | Gladys Carvacho[cite: 1] |
+
+---
+
 # Microservicio de Catálogo de Eventos (TicketU)
 
 Microservicio backend RESTful desarrollado en **Node.js** y **Express**, encargado de la gestión, consulta, búsqueda avanzada y vista de detalle de eventos, conectado a base de datos PostgreSQL alojada en **Supabase**.
