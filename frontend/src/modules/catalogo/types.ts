@@ -38,3 +38,18 @@ export interface RespuestaDetalle {
     success: boolean;
     data: Evento;
 }
+
+export interface Resena {
+  usuario_id: string;
+  nombre_usuario: string;   // TODO: acordar con Reseñas; su contrato v1 no lo incluye
+  calificacion: number;     // entero 1 a 5
+  comentario?: string;
+  fecha: string;            // ISO 8601
+}
+export interface ResumenResenas {
+  id_evento: string;
+  promedio: number | null;
+  total_resenas: number;
+  resenas: Resena[];        // las más recientes primero
+}
+export interface RespuestaResenas { success: boolean; data: ResumenResenas; }

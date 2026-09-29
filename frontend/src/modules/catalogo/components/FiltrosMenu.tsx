@@ -205,17 +205,6 @@ export default function FiltrosMenu({ filtros, onChange }: FiltrosMenuProps) {
                         <span>Mejor valorados</span>
                     </label>
 
-                    {/* f. Promociones (deshabilitado) */}
-                    <label className={`${styles.opcionFiltro} ${styles.opcionDeshabilitada}`}>
-                        <input
-                            type="checkbox"
-                            disabled
-                            checked={false}
-                            className={styles.checkbox}
-                        />
-                        <span>Promociones</span>
-                        <span className={styles.textoProximamente}>Próximamente</span>
-                    </label>
 
                     {/* Botón Limpiar filtros */}
                     <button

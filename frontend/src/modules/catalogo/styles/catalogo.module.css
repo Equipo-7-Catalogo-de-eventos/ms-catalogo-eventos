@@ -848,3 +848,251 @@
     line-height: 1.5;
     color: var(--color-secundario);
 }
+
+/* Resumen Reseñas (HU6) */
+.resumenResenasContainer {
+    display: flex;
+    flex-direction: column;
+}
+
+.resumenResenasBarra {
+    display: flex;
+    align-items: center;
+    width: 100%;
+}
+
+.resumenResenasLinea {
+    flex: 1;
+    height: 1px;
+    background-color: var(--color-borde);
+}
+
+.resumenResenasBotonToggle {
+    background-color: var(--color-fondo);
+    border: 1px solid var(--color-borde);
+    border-radius: 999px;
+    padding: 8px 24px;
+    min-height: 44px;
+    font-family: var(--font-familia-titulos);
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--color-primario);
+    cursor: pointer;
+    margin: 0 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: background-color 0.2s ease;
+}
+
+.resumenResenasBotonToggle:hover {
+    background-color: var(--color-info);
+}
+
+.resumenResenasContenido {
+    margin-top: 32px;
+}
+
+.resumenResenasCabecera {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 24px;
+}
+
+@media (max-width: 768px) {
+    .resumenResenasCabecera {
+        flex-direction: column;
+    }
+}
+
+.resumenResenasTitulos {
+    flex: 1;
+}
+
+.resumenResenasH2 {
+    font-family: var(--font-familia-titulos);
+    font-weight: 700;
+    font-size: 20px;
+    color: var(--color-primario);
+    margin: 0 0 8px 0;
+}
+
+.resumenResenasDescripcion {
+    font-family: var(--font-familia-cuerpo);
+    font-size: 14px;
+    color: var(--color-secundario);
+    margin: 0;
+}
+
+.resumenResenasTarjeta {
+    background-color: var(--color-fondo);
+    border: 1px solid var(--color-borde);
+    border-radius: var(--radio-tarjeta);
+    box-shadow: var(--sombra-tarjeta);
+    overflow: hidden;
+    max-width: 340px;
+    display: flex;
+}
+
+.resumenResenasTarjetaImagen {
+    width: 120px;
+    height: 110px;
+    flex-shrink: 0;
+}
+
+.resumenResenasTarjetaDatos {
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    flex: 1;
+}
+
+.resumenResenasPromedioFila {
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+    margin-bottom: 4px;
+}
+
+.resumenResenasPromedioNum {
+    font-family: var(--font-familia-titulos);
+    font-weight: 700;
+    font-size: 32px;
+    color: var(--color-primario);
+    line-height: 1;
+}
+
+.resumenResenasPromedioTotal {
+    font-family: var(--font-familia-cuerpo);
+    font-size: 14px;
+    color: var(--color-secundario);
+}
+
+.resumenResenasBasadoEn {
+    font-family: var(--font-familia-cuerpo);
+    font-size: 12px;
+    color: var(--color-secundario);
+    margin-top: 8px;
+}
+
+.resumenResenasLista {
+    margin-top: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.resumenResenasItem {
+    background-color: var(--color-fondo);
+    border: 1px solid var(--color-borde);
+    border-radius: var(--radio-tarjeta);
+    padding: 16px 20px;
+}
+
+.resumenResenasItemCabecera {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 12px;
+}
+
+.resumenResenasItemAvatarFila {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.resumenResenasAvatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: var(--color-info);
+    color: var(--color-primario);
+    font-family: var(--font-familia-titulos);
+    font-weight: 700;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.resumenResenasItemDatosUser {
+    display: flex;
+    flex-direction: column;
+}
+
+.resumenResenasNombre {
+    font-family: var(--font-familia-cuerpo);
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--color-primario);
+}
+
+.resumenResenasFecha {
+    font-family: var(--font-familia-cuerpo);
+    font-size: 12px;
+    color: var(--color-secundario);
+    margin-top: 2px;
+}
+
+.resumenResenasEstrellasContainer {
+    display: flex;
+    align-items: center;
+}
+
+.srOnly {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+.resumenResenasComentario {
+    font-family: var(--font-familia-cuerpo);
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--color-primario);
+    margin: 0;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.resumenResenasBotonCtaContainer {
+    margin-top: 32px;
+    display: flex;
+    justify-content: center;
+}
+
+.resumenResenasVacio {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 32px;
+    text-align: center;
+}
+
+.resumenResenasVacioTitulo {
+    font-family: var(--font-familia-titulos);
+    font-weight: 600;
+    font-size: 16px;
+    color: var(--color-primario);
+    margin: 0 0 4px 0;
+}
+
+.resumenResenasVacioDesc {
+    font-family: var(--font-familia-cuerpo);
+    font-size: 14px;
+    color: var(--color-secundario);
+    margin: 0 0 16px 0;
+}

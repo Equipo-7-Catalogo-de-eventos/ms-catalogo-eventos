@@ -9,8 +9,12 @@ Banco de pruebas en Next.js 14 para el módulo Catálogo.
 
 ## Qué se migra al repositorio común
 Solo `src/app/catalogo/` y `src/modules/catalogo/`.
-Todo lo demás (layout, header, footer, `lib/env.ts` y las simulaciones de
-entradas, promociones y reseñas) es andamiaje local.
+Todo lo demás (layout, header, footer y `lib/env.ts`) es andamiaje local.
+
+## Datos simulados
+- `USAR_DATOS_PRUEBA` en `api.ts`: eventos locales en vez del backend.
+- `USAR_DATOS_PRUEBA_RESENAS` en `api.ts`: reseñas desde `resenasPrueba.json`
+  mientras no exista la integración con el módulo de Reseñas.
 
 ## Datos de prueba
 En `src/modules/catalogo/api.ts`, `USAR_DATOS_PRUEBA = true` permite trabajar sin backend.
