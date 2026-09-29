@@ -1,0 +1,285 @@
+/* ANDAMIAJE LOCAL: simula el componente compartido del repo común. NO se migra. */
+
+/* Contenedor Header */
+.header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    width: 100%;
+    font-family: var(--font-poppins), sans-serif;
+}
+
+/* Fila Superior */
+.filaSuperior {
+    height: 64px;
+    background-color: #2F4374;
+    padding: 0 48px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-sizing: border-box;
+}
+
+.logoLink {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    text-decoration: none;
+    color: #FFFFFF;
+    border-radius: 4px;
+}
+
+.logoLink:focus-visible {
+    outline: 2px solid #FFFFFF;
+    outline-offset: 2px;
+}
+
+.logoTexto {
+    font-family: var(--font-poppins), sans-serif;
+    font-size: 24px;
+    font-weight: 700;
+    color: #FFFFFF;
+    letter-spacing: 1px;
+}
+
+.filaSuperiorDerecha {
+    display: flex;
+    align-items: center;
+    gap: 32px;
+}
+
+.botonBuscar {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: none;
+    color: #FFFFFF;
+    cursor: pointer;
+    min-width: 44px;
+    min-height: 44px;
+    padding: 4px;
+    border-radius: 4px;
+}
+
+.botonBuscar:focus-visible {
+    outline: 2px solid #FFFFFF;
+    outline-offset: 2px;
+}
+
+.textoBuscar {
+    font-family: var(--font-poppins), sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    color: #FFFFFF;
+    margin-top: 2px;
+}
+
+.avatarBoton {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background-color: #F5EBDA;
+    border: none;
+    color: #2F4374;
+    font-family: var(--font-poppins), sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    padding: 0;
+}
+
+.avatarBoton:focus-visible {
+    outline: 2px solid #FFFFFF;
+    outline-offset: 2px;
+}
+
+/* Fila de Navegación */
+.filaNavegacion {
+    height: 48px;
+    background-color: #5A70A8;
+    padding: 0 48px;
+    display: flex;
+    align-items: center;
+    box-sizing: border-box;
+}
+
+.nav {
+    display: flex;
+    align-items: center;
+    height: 100%;
+}
+
+.navLink {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    padding: 0 20px;
+    font-family: var(--font-poppins), sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    text-decoration: none;
+    color: rgba(255, 255, 255, 0.75);
+    transition: color 150ms ease;
+    border-bottom: 3px solid transparent;
+    border-top: 3px solid transparent;
+    box-sizing: border-box;
+}
+
+.navLink:hover {
+    color: #FFFFFF;
+}
+
+.navLink:focus-visible {
+    outline: 2px solid #FFFFFF;
+    outline-offset: 2px;
+}
+
+.navLinkActivo {
+    color: #FFFFFF;
+    border-bottom-color: #F5EBDA;
+}
+
+/* Footer */
+.footer {
+    background-color: #2F4374;
+    min-height: 64px;
+    padding: 16px 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    box-sizing: border-box;
+    font-family: var(--font-poppins), sans-serif;
+}
+
+.footerCentro {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.footerMarca {
+    font-family: var(--font-poppins), sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    color: #FFFFFF;
+    letter-spacing: 1px;
+}
+
+.footerSeparador {
+    width: 1px;
+    height: 20px;
+    background-color: rgba(255, 255, 255, 0.3);
+    margin: 0 24px;
+    display: block;
+}
+
+.footerLink {
+    font-family: var(--font-inter), sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+    color: #FFFFFF;
+    text-decoration: none;
+    border-radius: 2px;
+}
+
+.footerLink:hover {
+    text-decoration: underline;
+}
+
+.footerLink:focus-visible {
+    outline: 2px solid #FFFFFF;
+    outline-offset: 2px;
+}
+
+.botonAyuda {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background-color: #FFFFFF;
+    border: none;
+    color: #2F4374;
+    font-family: var(--font-poppins), sans-serif;
+    font-size: 20px;
+    font-weight: 600;
+    cursor: pointer;
+    position: absolute;
+    right: 24px;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.botonAyuda:focus-visible {
+    outline: 2px solid #FFFFFF;
+    outline-offset: 2px;
+}
+
+/* Responsivo Móvil (< 640px) */
+@media (max-width: 640px) {
+    .filaSuperior {
+        padding: 0 16px;
+    }
+
+    .logoTexto {
+        font-size: 18px;
+    }
+
+    .textoBuscar {
+        display: none;
+    }
+
+    .filaNavegacion {
+        padding: 0 16px;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+    }
+
+    .filaNavegacion::-webkit-scrollbar {
+        display: none;
+    }
+
+    .nav {
+        white-space: nowrap;
+        width: max-content;
+    }
+
+    .navLink {
+        flex-shrink: 0;
+    }
+
+    .footer {
+        padding: 24px 16px;
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .footerCentro {
+        flex-direction: column;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .footerSeparador {
+        display: none;
+    }
+
+    .botonAyuda {
+        position: static;
+        transform: none;
+        margin-top: 8px;
+    }
+}
