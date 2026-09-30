@@ -8,6 +8,7 @@ import FiltrosMenu, {
     type FiltrosMenuState,
 } from "./FiltrosMenu";
 import { poppins, inter } from "../styles/fonts";
+import { esPasado } from "../formato";
 import styles from "../styles/catalogo.module.css";
 
 interface CatalogoVistaProps {
@@ -59,10 +60,10 @@ export default function CatalogoVista({ eventos }: CatalogoVistaProps) {
 
             // 2. Filtros de menú
             // a / b: Estado temporal
-            if (filtros.estadoTemporal === "proximos" && evento.evento_estado === "pasado") {
+            if (filtros.estadoTemporal === "proximos" && esPasado(evento)) {
                 return false;
             }
-            if (filtros.estadoTemporal === "pasados" && evento.evento_estado !== "pasado") {
+            if (filtros.estadoTemporal === "pasados" && !esPasado(evento)) {
                 return false;
             }
 
@@ -86,7 +87,7 @@ export default function CatalogoVista({ eventos }: CatalogoVistaProps) {
             return true;
         });
 
-        // 3. Orden "mejor valorados" (los con resena_total === 0 van al final)
+        // 3. Orden temporal / mejor valorados
         if (filtros.mejorValorados) {
             resultado = [...resultado].sort((a, b) => {
                 const aSinResenas = a.resena_total === 0;
@@ -95,6 +96,15 @@ export default function CatalogoVista({ eventos }: CatalogoVistaProps) {
                 if (!aSinResenas && bSinResenas) return -1;
                 if (aSinResenas && bSinResenas) return 0;
                 return b.resena_calificacion_promedio - a.resena_calificacion_promedio;
+            });
+        } else {
+            resultado = [...resultado].sort((a, b) => {
+                const fechaA = new Date(a.evento_fecha).getTime();
+                const fechaB = new Date(b.evento_fecha).getTime();
+                if (filtros.estadoTemporal === "pasados") {
+                    return fechaB - fechaA; // Descendente (más reciente primero)
+                }
+                return fechaA - fechaB; // Ascendente (más próximo primero)
             });
         }
 
@@ -110,6 +120,15 @@ export default function CatalogoVista({ eventos }: CatalogoVistaProps) {
 
     const textoContador =
         eventosFiltrados.length === 1 ? "1 evento" : `${eventosFiltrados.length} eventos`;
+
+    let textoSinResultados = "No encontramos eventos con esos filtros.";
+    if (!busqueda && !filtros.gratuitos && !filtros.rangoPrecioActivo && !filtros.mejorValorados) {
+        if (filtros.estadoTemporal === "proximos") {
+            textoSinResultados = "No hay eventos próximos disponibles.";
+        } else if (filtros.estadoTemporal === "pasados") {
+            textoSinResultados = "No hay registro de eventos pasados.";
+        }
+    }
 
     return (
         <div className={`${styles.catalogo} ${poppins.variable} ${inter.variable}`}>
@@ -154,15 +173,17 @@ export default function CatalogoVista({ eventos }: CatalogoVistaProps) {
             {eventosFiltrados.length === 0 ? (
                 <div className={styles.sinResultados}>
                     <p className={styles.textoSinResultados}>
-                        No encontramos eventos con esos filtros.
+                        {textoSinResultados}
                     </p>
-                    <button
-                        type="button"
-                        onClick={handleLimpiarTodo}
-                        className={styles.botonReset}
-                    >
-                        Limpiar filtros
-                    </button>
+                    {textoSinResultados === "No encontramos eventos con esos filtros." && (
+                        <button
+                            type="button"
+                            onClick={handleLimpiarTodo}
+                            className={styles.botonReset}
+                        >
+                            Limpiar filtros
+                        </button>
+                    )}
                 </div>
             ) : (
                 <>

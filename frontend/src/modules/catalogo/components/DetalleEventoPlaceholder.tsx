@@ -18,7 +18,7 @@
 import Link from "next/link";
 import { obtenerEventoPorId, obtenerResenasEvento } from "../api";
 import type { Evento } from "../types";
-import { formatearFechaLarga, formatearPrecio, formatearNumero } from "../formato";
+import { formatearFechaLarga, formatearPrecio, formatearNumero, esPasado } from "../formato";
 import ImagenEvento from "./ImagenEvento";
 import Estrellas from "./Estrellas";
 import ResumenResenas from "./ResumenResenas";
@@ -56,7 +56,10 @@ export default async function DetalleEventoPlaceholder({
         );
     }
 
-    const esAtenuada = evento.evento_estado === "agotado" || evento.evento_estado === "pasado" || evento.evento_estado === "cancelado";
+    const eventoEsPasado = esPasado(evento);
+    const esAgotado = evento.evento_estado === "agotado";
+    const esCancelado = evento.evento_estado === "cancelado";
+    const esAtenuada = esAgotado || esCancelado || eventoEsPasado;
     const precioTexto = formatearPrecio(evento.evento_precio_final);
     const precioEsGratis = precioTexto === "Gratis";
 
@@ -100,21 +103,21 @@ export default async function DetalleEventoPlaceholder({
             <div className={styles.cabeceraDetalle}>
                 <h1 className={styles.tituloDetalle}>{evento.evento_titulo}</h1>
 
-                {evento.evento_estado !== "disponible" && (
+                {(esAgotado || esCancelado || eventoEsPasado) && (
                     <span
                         className={`${styles.badgeEstadoDetalle} ${
-                            evento.evento_estado === "agotado"
+                            esAgotado
                                 ? styles.badgeAgotado
-                                : evento.evento_estado === "pasado"
-                                ? styles.badgePasado
-                                : styles.badgeCancelado
+                                : esCancelado
+                                ? styles.badgeCancelado
+                                : styles.badgePasado
                         }`}
                     >
-                        {evento.evento_estado === "agotado" 
+                        {esAgotado 
                             ? "Agotado" 
-                            : evento.evento_estado === "pasado" 
-                            ? "Pasado" 
-                            : "Cancelado"}
+                            : esCancelado 
+                            ? "Cancelado" 
+                            : "Pasado"}
                     </span>
                 )}
 
@@ -249,7 +252,7 @@ export default async function DetalleEventoPlaceholder({
                         </dd>
                     </div>
 
-                    {evento.evento_estado !== "pasado" && evento.evento_estado !== "cancelado" && (
+                    {!eventoEsPasado && !esCancelado && (
                         <div className={styles.filaDato}>
                             <span className={styles.iconoDato}>
                                 <svg
@@ -289,11 +292,11 @@ export default async function DetalleEventoPlaceholder({
 
             {/* f. Sección de compra */}
             <section className={styles.seccionCompra} aria-label="Comprar entradas">
-                {evento.evento_estado !== "cancelado" && (
+                {!esCancelado && (
                     <p className={styles.textoCompraEncabezado}>¡Consigue tu entrada aquí!</p>
                 )}
 
-                {evento.evento_estado === "disponible" ? (
+                {!esAgotado && !esCancelado && !eventoEsPasado ? (
                     // TODO: confirmar con el Grupo 3 (Entradas) la ruta y el parámetro del flujo de compra.
                     <Link
                         href={`/entradas?eventoId=${encodeURIComponent(evento.evento_id)}`}
@@ -301,7 +304,7 @@ export default async function DetalleEventoPlaceholder({
                     >
                         {evento.evento_tipo === "gratuito" ? "Reservar" : "Comprar"}
                     </Link>
-                ) : evento.evento_estado === "cancelado" ? (
+                ) : esCancelado ? (
                     <>
                         <div className={styles.etiquetaCanceladoPill}>
                             Evento cancelado
@@ -320,7 +323,7 @@ export default async function DetalleEventoPlaceholder({
                             {evento.evento_tipo === "gratuito" ? "Reservar" : "Comprar"}
                         </button>
                         <p className={styles.textoEstadoAviso}>
-                            {evento.evento_estado === "agotado"
+                            {esAgotado
                                 ? "Las entradas para este evento están agotadas."
                                 : "Este evento ya se realizó."}
                         </p>

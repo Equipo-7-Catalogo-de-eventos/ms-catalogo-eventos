@@ -19,6 +19,7 @@ export interface Evento {
     resena_total: number;
     metrica_clics?: number;
     created_at?: string;
+    es_pasado?: boolean; // calculado por el backend
 }
 
 export interface FiltrosEventos {

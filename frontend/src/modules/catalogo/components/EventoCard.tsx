@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { Evento } from "../types";
-import { formatearFecha, formatearPrecio } from "../formato";
+import { formatearFecha, formatearPrecio, esPasado } from "../formato";
 import ImagenEvento from "./ImagenEvento";
 import styles from "../styles/catalogo.module.css";
 
@@ -9,15 +9,18 @@ interface EventoCardProps {
 }
 
 export default function EventoCard({ evento }: EventoCardProps) {
-    const esAtenuada = evento.evento_estado === "agotado" || evento.evento_estado === "pasado" || evento.evento_estado === "cancelado";
+    const eventoEsPasado = esPasado(evento);
+    const esAgotado = evento.evento_estado === "agotado";
+    const esCancelado = evento.evento_estado === "cancelado";
+    const esAtenuada = esAgotado || esCancelado || eventoEsPasado;
 
     const estadoCardClass =
-        evento.evento_estado === "agotado"
+        esAgotado
             ? styles.cardAgotado
-            : evento.evento_estado === "pasado"
-            ? styles.cardPasado
-            : evento.evento_estado === "cancelado"
+            : esCancelado
             ? styles.cardCancelado
+            : eventoEsPasado
+            ? styles.cardPasado
             : styles.cardDisponible;
 
     const precioTexto = formatearPrecio(evento.evento_precio_final);
@@ -38,21 +41,21 @@ export default function EventoCard({ evento }: EventoCardProps) {
                 />
 
                 {/* Badge de estado en esquina superior izquierda (solo si NO es disponible) */}
-                {evento.evento_estado !== "disponible" && (
+                {(esAgotado || esCancelado || eventoEsPasado) && (
                     <span
                         className={`${styles.badgeEstado} ${
-                            evento.evento_estado === "agotado"
+                            esAgotado
                                 ? styles.badgeAgotado
-                                : evento.evento_estado === "pasado"
-                                ? styles.badgePasado
-                                : styles.badgeCancelado
+                                : esCancelado
+                                ? styles.badgeCancelado
+                                : styles.badgePasado
                         }`}
                     >
-                        {evento.evento_estado === "agotado" 
+                        {esAgotado 
                             ? "Agotado" 
-                            : evento.evento_estado === "pasado" 
-                            ? "Pasado" 
-                            : "Cancelado"}
+                            : esCancelado 
+                            ? "Cancelado" 
+                            : "Pasado"}
                     </span>
                 )}
 

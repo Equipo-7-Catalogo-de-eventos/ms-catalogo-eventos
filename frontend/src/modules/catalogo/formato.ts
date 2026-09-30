@@ -74,3 +74,12 @@ export function formatearFechaRelativa(iso: string): string {
 export function formatearNumero(n: number): string {
     return new Intl.NumberFormat("es-CL").format(n);
 }
+
+// El backend decide si un evento es pasado (es_pasado);
+// el respaldo por evento_estado es solo para los datos de prueba.
+export function esPasado(evento: { es_pasado?: boolean; evento_estado: string }): boolean {
+    if (typeof evento.es_pasado === "boolean") {
+        return evento.es_pasado;
+    }
+    return evento.evento_estado === "pasado";
+}

@@ -13,7 +13,7 @@ export interface FiltrosMenuState {
 }
 
 export const FILTROS_MENU_INICIALES: FiltrosMenuState = {
-    estadoTemporal: null,
+    estadoTemporal: "proximos",
     gratuitos: false,
     rangoPrecioActivo: false,
     precioMin: "",
