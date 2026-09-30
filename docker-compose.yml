@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  ms-catalogo-eventos:
+    build: .
+    container_name: ms-catalogo-eventos
+    restart: unless-stopped
+    ports:
+      - "4000:4000"
+    env_file:
+      - .env
+    environment:
+      - PORT=4000
+      - NODE_ENV=production
+    networks:
+      - plataforma-eventos-net
+
+networks:
+  plataforma-eventos-net:
+    external: true
