@@ -1,6 +1,6 @@
 // Estructura real de la tabla `eventos` (schema_db.sql)
 export type TipoEvento = "gratuito" | "pagado";
-export type EstadoEvento = "disponible" | "agotado" | "pasado";
+export type EstadoEvento = "disponible" | "agotado" | "pasado" | "cancelado";
 
 export interface Evento {
     evento_id: string;

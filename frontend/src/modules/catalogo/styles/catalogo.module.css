@@ -325,6 +325,10 @@
     border-left-color: var(--color-inactivo-texto);
 }
 
+.cardCancelado {
+    border-left-color: var(--color-peligro-texto);
+}
+
 .imagenContenedor {
     position: relative;
     width: 100%;
@@ -385,6 +389,11 @@
 .badgePasado {
     background-color: var(--color-inactivo-fondo);
     color: var(--color-inactivo-texto);
+}
+
+.badgeCancelado {
+    background-color: var(--color-peligro-fondo);
+    color: var(--color-peligro-texto);
 }
 
 .pillCalificacion {
@@ -847,6 +856,21 @@
     font-size: 12px;
     line-height: 1.5;
     color: var(--color-secundario);
+}
+
+.etiquetaCanceladoPill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--color-peligro-fondo);
+    color: var(--color-peligro-texto);
+    font-family: var(--font-familia-titulos);
+    font-size: 14px;
+    font-weight: 600;
+    height: 40px;
+    padding: 0 24px;
+    border-radius: 999px;
+    margin-bottom: 8px;
 }
 
 /* Resumen Reseñas (HU6) */

@@ -9,13 +9,15 @@ interface EventoCardProps {
 }
 
 export default function EventoCard({ evento }: EventoCardProps) {
-    const esAtenuada = evento.evento_estado === "agotado" || evento.evento_estado === "pasado";
+    const esAtenuada = evento.evento_estado === "agotado" || evento.evento_estado === "pasado" || evento.evento_estado === "cancelado";
 
     const estadoCardClass =
         evento.evento_estado === "agotado"
             ? styles.cardAgotado
             : evento.evento_estado === "pasado"
             ? styles.cardPasado
+            : evento.evento_estado === "cancelado"
+            ? styles.cardCancelado
             : styles.cardDisponible;
 
     const precioTexto = formatearPrecio(evento.evento_precio_final);
@@ -41,10 +43,16 @@ export default function EventoCard({ evento }: EventoCardProps) {
                         className={`${styles.badgeEstado} ${
                             evento.evento_estado === "agotado"
                                 ? styles.badgeAgotado
-                                : styles.badgePasado
+                                : evento.evento_estado === "pasado"
+                                ? styles.badgePasado
+                                : styles.badgeCancelado
                         }`}
                     >
-                        {evento.evento_estado === "agotado" ? "Agotado" : "Pasado"}
+                        {evento.evento_estado === "agotado" 
+                            ? "Agotado" 
+                            : evento.evento_estado === "pasado" 
+                            ? "Pasado" 
+                            : "Cancelado"}
                     </span>
                 )}
 

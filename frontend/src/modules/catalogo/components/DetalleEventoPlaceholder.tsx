@@ -56,7 +56,7 @@ export default async function DetalleEventoPlaceholder({
         );
     }
 
-    const esAtenuada = evento.evento_estado === "agotado" || evento.evento_estado === "pasado";
+    const esAtenuada = evento.evento_estado === "agotado" || evento.evento_estado === "pasado" || evento.evento_estado === "cancelado";
     const precioTexto = formatearPrecio(evento.evento_precio_final);
     const precioEsGratis = precioTexto === "Gratis";
 
@@ -105,10 +105,16 @@ export default async function DetalleEventoPlaceholder({
                         className={`${styles.badgeEstadoDetalle} ${
                             evento.evento_estado === "agotado"
                                 ? styles.badgeAgotado
-                                : styles.badgePasado
+                                : evento.evento_estado === "pasado"
+                                ? styles.badgePasado
+                                : styles.badgeCancelado
                         }`}
                     >
-                        {evento.evento_estado === "agotado" ? "Agotado" : "Pasado"}
+                        {evento.evento_estado === "agotado" 
+                            ? "Agotado" 
+                            : evento.evento_estado === "pasado" 
+                            ? "Pasado" 
+                            : "Cancelado"}
                     </span>
                 )}
 
@@ -243,7 +249,7 @@ export default async function DetalleEventoPlaceholder({
                         </dd>
                     </div>
 
-                    {evento.evento_estado !== "pasado" && (
+                    {evento.evento_estado !== "pasado" && evento.evento_estado !== "cancelado" && (
                         <div className={styles.filaDato}>
                             <span className={styles.iconoDato}>
                                 <svg
@@ -283,7 +289,9 @@ export default async function DetalleEventoPlaceholder({
 
             {/* f. Sección de compra */}
             <section className={styles.seccionCompra} aria-label="Comprar entradas">
-                <p className={styles.textoCompraEncabezado}>¡Consigue tu entrada aquí!</p>
+                {evento.evento_estado !== "cancelado" && (
+                    <p className={styles.textoCompraEncabezado}>¡Consigue tu entrada aquí!</p>
+                )}
 
                 {evento.evento_estado === "disponible" ? (
                     // TODO: confirmar con el Grupo 3 (Entradas) la ruta y el parámetro del flujo de compra.
@@ -293,6 +301,15 @@ export default async function DetalleEventoPlaceholder({
                     >
                         {evento.evento_tipo === "gratuito" ? "Reservar" : "Comprar"}
                     </Link>
+                ) : evento.evento_estado === "cancelado" ? (
+                    <>
+                        <div className={styles.etiquetaCanceladoPill}>
+                            Evento cancelado
+                        </div>
+                        <p className={styles.textoEstadoAviso}>
+                            Este evento fue cancelado por el organizador.
+                        </p>
+                    </>
                 ) : (
                     <>
                         <button
