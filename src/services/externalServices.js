@@ -26,7 +26,11 @@ async function consultarCalificacionesBasicas(eventIds) {
 
     if (response.ok) {
       const data = await response.json();
-      return data.calificaciones || {};
+      const calificaciones = data.calificaciones || {};
+      for (const id in calificaciones) {
+        calificaciones[id].disponible = true;
+      }
+      return calificaciones;
     }
   } catch (error) {
     console.warn(`[BE2] Reseñas no disponible para calificaciones básicas (${error.message}). Aplicando fallback.`);
@@ -35,7 +39,7 @@ async function consultarCalificacionesBasicas(eventIds) {
   // Fallback: Retorna estructura por defecto sin calificaciones
   const fallback = {};
   for (const id of eventIds) {
-    fallback[id] = { promedio: null, total_resenas: 0, mensaje: 'Sin calificaciones aún' };
+    fallback[id] = { promedio: null, total_resenas: 0, mensaje: 'Sin calificaciones aún', disponible: false };
   }
   return fallback;
 }
@@ -55,7 +59,9 @@ async function consultarResenasEvento(idEvento) {
     });
 
     if (response.ok) {
-      return await response.json();
+      const data = await response.json();
+      data.disponible = true;
+      return data;
     }
   } catch (error) {
     console.warn(`[BE2] Reseñas no disponible para evento ${idEvento} (${error.message}). Mostrando fallback.`);
@@ -63,6 +69,7 @@ async function consultarResenasEvento(idEvento) {
 
   // Fallback seguro requerido por contrato
   return {
+    disponible: false,
     id_evento: idEvento,
     promedio: null,
     total_resenas: 0,

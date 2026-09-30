@@ -140,10 +140,10 @@ const getEvents = async (req, res) => {
         ...evento,
         es_pasado: fechaEvento < now,
         // Si Reseñas entrega un promedio más reciente, se combina con Graceful Degradation
-        resena_calificacion_promedio: califExt?.promedio !== undefined && califExt.promedio !== null
+        resena_calificacion_promedio: califExt?.disponible === true
           ? califExt.promedio
           : Number(evento.resena_calificacion_promedio || 0),
-        resena_total: califExt?.total_resenas !== undefined
+        resena_total: califExt?.disponible === true
           ? califExt.total_resenas
           : Number(evento.resena_total || 0),
         resena_estado: califExt?.mensaje || (Number(evento.resena_total) === 0 ? 'Sin calificaciones aún' : 'Con opiniones')
@@ -221,6 +221,12 @@ const getEventById = async (req, res) => {
       success: true,
       data: {
         ...data,
+        resena_calificacion_promedio: resenasDetalle.disponible === true 
+          ? resenasDetalle.promedio 
+          : Number(data.resena_calificacion_promedio || 0),
+        resena_total: resenasDetalle.disponible === true 
+          ? resenasDetalle.total_resenas 
+          : Number(data.resena_total || 0),
         es_pasado,
         resenas_opiniones: resenasDetalle.resenas || [],
         resena_estado: resenasDetalle.estado_resenas || (resenasDetalle.resenas?.length === 0 ? 'Sin calificaciones aún' : 'Disponible')
