@@ -34,7 +34,9 @@ export async function buscarEventos(filtros: FiltrosEventos = {}): Promise<Event
     if (filtros.search) params.set("search", filtros.search);
     if (filtros.category) params.set("category", filtros.category);
     if (filtros.isFree !== undefined) params.set("isFree", String(filtros.isFree));
-
+    // TODO: temporal. El front pagina en el navegador, así que pide todos los eventos de una vez.
+    // Quitar cuando el front use la paginación del backend (pagina/limite).
+    params.set("limite", "100");
     const res = await fetch(`${GATEWAY_URL}${BASE_PATH}?${params}`, { cache: "no-store" });
     if (!res.ok) throw new Error("Error al conectar con el módulo de catálogo");
     const json: RespuestaLista = await res.json();
