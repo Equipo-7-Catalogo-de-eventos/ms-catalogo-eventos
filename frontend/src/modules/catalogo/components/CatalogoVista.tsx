@@ -52,7 +52,7 @@ export default function CatalogoVista({ eventos }: CatalogoVistaProps) {
         let resultado = eventos.filter((evento) => {
             // 1. Filtro por búsqueda
             if (termino) {
-                const titulo = normalizarTexto(evento.evento_titulo);
+                const titulo = normalizarTexto(evento.nombre_evento);
                 if (!titulo.includes(termino)) {
                     return false;
                 }
@@ -68,7 +68,7 @@ export default function CatalogoVista({ eventos }: CatalogoVistaProps) {
             }
 
             // c: Gratuitos
-            if (filtros.gratuitos && evento.evento_tipo !== "gratuito") {
+            if (filtros.gratuitos && evento.tipo_evento !== "gratuito") {
                 return false;
             }
 
@@ -76,10 +76,10 @@ export default function CatalogoVista({ eventos }: CatalogoVistaProps) {
             if (filtros.rangoPrecioActivo) {
                 const min = filtros.precioMin.trim();
                 const max = filtros.precioMax.trim();
-                if (min !== "" && evento.evento_precio_final < Number(min)) {
+                if (min !== "" && evento.precio_final_evento < Number(min)) {
                     return false;
                 }
-                if (max !== "" && evento.evento_precio_final > Number(max)) {
+                if (max !== "" && evento.precio_final_evento > Number(max)) {
                     return false;
                 }
             }
@@ -90,17 +90,17 @@ export default function CatalogoVista({ eventos }: CatalogoVistaProps) {
         // 3. Orden temporal / mejor valorados
         if (filtros.mejorValorados) {
             resultado = [...resultado].sort((a, b) => {
-                const aSinResenas = a.resena_total === 0;
-                const bSinResenas = b.resena_total === 0;
+                const aSinResenas = a.total_resenas === 0;
+                const bSinResenas = b.total_resenas === 0;
                 if (aSinResenas && !bSinResenas) return 1;
                 if (!aSinResenas && bSinResenas) return -1;
                 if (aSinResenas && bSinResenas) return 0;
-                return b.resena_calificacion_promedio - a.resena_calificacion_promedio;
+                return b.promedio_calificacion - a.promedio_calificacion;
             });
         } else {
             resultado = [...resultado].sort((a, b) => {
-                const fechaA = new Date(a.evento_fecha).getTime();
-                const fechaB = new Date(b.evento_fecha).getTime();
+                const fechaA = new Date(a.fecha_evento).getTime();
+                const fechaB = new Date(b.fecha_evento).getTime();
                 if (filtros.estadoTemporal === "pasados") {
                     return fechaB - fechaA; // Descendente (más reciente primero)
                 }
@@ -189,7 +189,7 @@ export default function CatalogoVista({ eventos }: CatalogoVistaProps) {
                 <>
                     <div className={styles.grilla}>
                         {eventosPaginados.map((evento) => (
-                            <EventoCard key={evento.evento_id} evento={evento} />
+                            <EventoCard key={evento.id_evento} evento={evento} />
                         ))}
                     </div>
 

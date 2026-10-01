@@ -76,10 +76,10 @@ export function formatearNumero(n: number): string {
 }
 
 // El backend decide si un evento es pasado (es_pasado);
-// el respaldo por evento_estado es solo para los datos de prueba.
-export function esPasado(evento: { es_pasado?: boolean; evento_estado: string }): boolean {
+// el respaldo por estado_evento es solo para los datos de prueba.
+export function esPasado(evento: { es_pasado?: boolean; estado_evento: string }): boolean {
     if (typeof evento.es_pasado === "boolean") {
         return evento.es_pasado;
     }
-    return evento.evento_estado === "pasado";
+    return evento.estado_evento === "pasado";
 }

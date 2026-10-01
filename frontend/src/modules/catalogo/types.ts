@@ -3,20 +3,20 @@ export type TipoEvento = "gratuito" | "pagado";
 export type EstadoEvento = "disponible" | "agotado" | "pasado" | "cancelado";
 
 export interface Evento {
-    evento_id: string;
-    evento_titulo: string;
-    evento_descripcion: string;
-    evento_lugar: string;
-    evento_fecha: string;          // timestamp ISO, ej. "2026-10-15T10:00:00+00:00"
-    evento_hora: string;           // "10:00"
-    evento_imagen: string;         // URL
-    evento_precio_final: number;   // 0 = gratuito
-    evento_tipo: TipoEvento;
-    evento_categoria: string | null;
-    evento_estado: EstadoEvento;
-    inventario_stock: number;
-    resena_calificacion_promedio: number; // 0 si no hay reseñas
-    resena_total: number;
+    id_evento: string;
+    nombre_evento: string;
+    descripcion_evento: string;
+    lugar_evento: string;
+    fecha_evento: string;          // timestamp ISO, ej. "2026-10-15T10:00:00+00:00"
+    hora_evento: string;           // "10:00"
+    imagen_evento: string;         // URL
+    precio_final_evento: number;   // 0 = gratuito
+    tipo_evento: TipoEvento;
+    categoria_evento: string | null;
+    estado_evento: EstadoEvento;
+    stock_actual: number;
+    promedio_calificacion: number; // 0 si no hay reseñas
+    total_resenas: number;
     metrica_clics?: number;
     created_at?: string;
     es_pasado?: boolean; // calculado por el backend

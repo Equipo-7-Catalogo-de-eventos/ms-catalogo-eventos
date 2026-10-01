@@ -15,7 +15,7 @@ const USAR_DATOS_PRUEBA = false;
 const USAR_DATOS_PRUEBA_RESENAS = true;
 
 // TODO: el repo común usa "/api/catalogo/eventos" vía Gateway. Confirmar path final.
-const BASE_PATH = "/api/v1/events";
+const BASE_PATH = "/api/catalogo/eventos";
 
 const esperar = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
@@ -23,9 +23,9 @@ export async function buscarEventos(filtros: FiltrosEventos = {}): Promise<Event
     if (USAR_DATOS_PRUEBA) {
         await esperar(500);
         return eventosPrueba.filter((e) => {
-            if (filtros.search && !e.evento_titulo.toLowerCase().includes(filtros.search.toLowerCase())) return false;
-            if (filtros.category && e.evento_categoria !== filtros.category) return false;
-            if (filtros.isFree !== undefined && (e.evento_tipo === "gratuito") !== filtros.isFree) return false;
+            if (filtros.search && !e.nombre_evento.toLowerCase().includes(filtros.search.toLowerCase())) return false;
+            if (filtros.category && e.categoria_evento !== filtros.category) return false;
+            if (filtros.isFree !== undefined && (e.tipo_evento === "gratuito") !== filtros.isFree) return false;
             return true;
         });
     }
@@ -46,7 +46,7 @@ export async function buscarEventos(filtros: FiltrosEventos = {}): Promise<Event
 export async function obtenerEventoPorId(eventoId: string): Promise<Evento> {
     if (USAR_DATOS_PRUEBA) {
         await esperar(500);
-        const evento = eventosPrueba.find((e) => e.evento_id === eventoId);
+        const evento = eventosPrueba.find((e) => e.id_evento === eventoId);
         if (!evento) throw new Error("Error al obtener el evento del catálogo");
         return evento;
     }
