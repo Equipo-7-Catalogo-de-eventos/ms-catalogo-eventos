@@ -9,7 +9,9 @@ const REQUEST_TIMEOUT_MS = 500; // SLA acordado en contratos < 500ms
 
 /**
  * Consulta calificaciones básicas en bloque a Reseñas.
- * Si Reseñas no responde o falla, aplica Graceful Degradation.
+ * Si Reseñas responde, marca disponible = true.
+ * Si no responde o falla, retorna disponible = false sin forzar 0,
+ * permitiendo que el controlador preserve las calificaciones locales de la base de datos.
  * @param {string[]} eventIds Lista de IDs de eventos
  * @returns {Promise<Object>} Mapa con id_evento y sus notas/promedios
  */
@@ -33,13 +35,13 @@ async function consultarCalificacionesBasicas(eventIds) {
       return calificaciones;
     }
   } catch (error) {
-    console.warn(`[BE2] Reseñas no disponible para calificaciones básicas (${error.message}). Aplicando fallback.`);
+    console.warn(`[BE2] Reseñas no disponible para calificaciones básicas (${error.message}). Preservando métricas locales.`);
   }
 
-  // Fallback: Retorna estructura por defecto sin calificaciones
+  // Fallback seguro: disponible = false para que el controlador preserve las estrellas locales
   const fallback = {};
   for (const id of eventIds) {
-    fallback[id] = { promedio: null, total_resenas: 0, mensaje: 'Sin calificaciones aún', disponible: false };
+    fallback[id] = { disponible: false, mensaje: 'Sin conexión con microservicio de Reseñas' };
   }
   return fallback;
 }
@@ -74,7 +76,7 @@ async function consultarResenasEvento(idEvento) {
     promedio: null,
     total_resenas: 0,
     resenas: [],
-    estado_resenas: 'Sin calificaciones aún'
+    estado_resenas: 'Sin conexión con microservicio de Reseñas'
   };
 }
 
