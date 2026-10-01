@@ -6,8 +6,8 @@ const {
 
 /**
  * GET /api/catalogo/eventos (y /api/v1/events)
- * Lista eventos con filtros avanzados (temporalidad, rango de fechas, categorías múltiples,
- * ordenamiento, paginación y búsqueda multivariable) y agrega el campo calculado es_pasado.
+ * Lista eventos con filtros avanzados usando la nomenclatura oficial de Anaís (PostgreSQL)
+ * y entrega respuesta dual para compatibilidad inmediata con el Frontend de Amalia.
  */
 const getEvents = async (req, res) => {
   try {
@@ -26,7 +26,7 @@ const getEvents = async (req, res) => {
       limite
     } = req.query;
 
-    // Validación estricta de isFree (Corrección 5: dar 400 si no es 'true' ni 'false')
+    // Validación estricta de isFree (da 400 si no es 'true' ni 'false')
     if (isFree !== undefined && isFree !== 'true' && isFree !== 'false') {
       return res.status(400).json({
         success: false,
@@ -42,69 +42,68 @@ const getEvents = async (req, res) => {
 
     let query = supabase.from('eventos').select('*', { count: 'exact' });
 
-    // 1. Búsqueda por palabra clave en título, descripción y lugar (Rúbrica punto 3 / HU2)
+    // 1. Búsqueda por palabra clave en nombre, descripción y lugar (Nueva columna Anaís)
     const searchTerm = search || criterio;
     if (searchTerm && searchTerm.trim() !== '') {
       const term = searchTerm.trim();
       query = query.or(
-        `evento_titulo.ilike.%${term}%,evento_descripcion.ilike.%${term}%,evento_lugar.ilike.%${term}%`
+        `nombre_evento.ilike.%${term}%,descripcion_evento.ilike.%${term}%,lugar_evento.ilike.%${term}%`
       );
     }
 
-    // 2. Filtro por categorías (soporta una o varias categorías separadas por coma)
+    // 2. Filtro por categorías (columna categoria_evento)
     const categoriesParam = categorias || categoria || category;
     if (categoriesParam) {
       const catList = categoriesParam.split(',').map(c => c.trim()).filter(Boolean);
       if (catList.length === 1) {
-        query = query.eq('evento_categoria', catList[0]);
+        query = query.eq('categoria_evento', catList[0]);
       } else if (catList.length > 1) {
-        query = query.in('evento_categoria', catList);
+        query = query.in('categoria_evento', catList);
       }
     }
 
-    // 3. Filtro por Gratis o Pagado
+    // 3. Filtro por Gratis o Pagado (columna tipo_evento)
     if (isFree !== undefined) {
       const tipo = isFree === 'true' ? 'gratuito' : 'pagado';
-      query = query.eq('evento_tipo', tipo);
+      query = query.eq('tipo_evento', tipo);
     }
 
-    // 4. Filtro por temporalidad (próximos / pasados según evento_fecha TIMESTAMP)
+    // 4. Filtro por temporalidad (columna fecha_evento TIMESTAMP WITH TIME ZONE)
     const nowIso = new Date().toISOString();
     if (temporalidad === 'proximos') {
-      query = query.gte('evento_fecha', nowIso);
+      query = query.gte('fecha_evento', nowIso);
     } else if (temporalidad === 'pasados') {
-      query = query.lt('evento_fecha', nowIso);
+      query = query.lt('fecha_evento', nowIso);
     }
 
     // 5. Filtro por rango de fechas específico
     if (fecha_desde) {
-      query = query.gte('evento_fecha', new Date(fecha_desde).toISOString());
+      query = query.gte('fecha_evento', new Date(fecha_desde).toISOString());
     }
     if (fecha_hasta) {
-      query = query.lte('evento_fecha', new Date(fecha_hasta).toISOString());
+      query = query.lte('fecha_evento', new Date(fecha_hasta).toISOString());
     }
 
     // 6. Ordenamiento dinámico
     switch (orden) {
       case 'fecha_desc':
-        query = query.order('evento_fecha', { ascending: false });
+        query = query.order('fecha_evento', { ascending: false });
         break;
       case 'valoracion':
-        query = query.order('resena_calificacion_promedio', { ascending: false, nullsFirst: false });
+        query = query.order('promedio_calificacion', { ascending: false, nullsFirst: false });
         break;
       case 'precio_asc':
-        query = query.order('evento_precio_final', { ascending: true });
+        query = query.order('precio_final_evento', { ascending: true });
         break;
       case 'precio_desc':
-        query = query.order('evento_precio_final', { ascending: false });
+        query = query.order('precio_final_evento', { ascending: false });
         break;
       case 'fecha_asc':
       default:
-        // Si se pide pasados explícitamente y no se indicó orden, mostrar los más recientes primero
         if (temporalidad === 'pasados') {
-          query = query.order('evento_fecha', { ascending: false });
+          query = query.order('fecha_evento', { ascending: false });
         } else {
-          query = query.order('evento_fecha', { ascending: true });
+          query = query.order('fecha_evento', { ascending: true });
         }
         break;
     }
@@ -117,36 +116,68 @@ const getEvents = async (req, res) => {
     if (error) {
       return res.status(500).json({
         success: false,
-        message: 'Error interno del servidor al consultar eventos',
+        message: 'Error interno del servidor al consultar eventos en la base de datos',
         error: error.message
       });
     }
 
-    // 8. Agregar campo calculado 'es_pasado' a cada evento (Rúbrica punto 2)
+    // 8. Integración BE2 y respuesta dual (Oficial Anaís + Alias para Amalia)
     const now = new Date();
-    const eventIds = (data || []).map(e => e.evento_id);
+    const eventIds = (data || []).map(e => e.id_evento);
 
-    // Integración BE2: Consultar calificaciones frescas de Reseñas con fallback seguro
     let calificacionesExternas = {};
     if (eventIds.length > 0) {
       calificacionesExternas = await consultarCalificacionesBasicas(eventIds);
     }
 
     const formattedEvents = (data || []).map(evento => {
-      const fechaEvento = new Date(evento.evento_fecha);
-      const califExt = calificacionesExternas[evento.evento_id];
+      const fechaEvento = new Date(evento.fecha_evento);
+      const califExt = calificacionesExternas[evento.id_evento];
+
+      const promCalif = califExt?.promedio !== undefined && califExt.promedio !== null
+        ? califExt.promedio
+        : Number(evento.promedio_calificacion || 0);
+
+      const totResenas = califExt?.total_resenas !== undefined
+        ? califExt.total_resenas
+        : Number(evento.total_resenas || 0);
+
+      const esPasado = fechaEvento < now;
 
       return {
-        ...evento,
-        es_pasado: fechaEvento < now,
-        // Si Reseñas entrega un promedio más reciente, se combina con Graceful Degradation
-        resena_calificacion_promedio: califExt?.disponible === true
-          ? califExt.promedio
-          : Number(evento.resena_calificacion_promedio || 0),
-        resena_total: califExt?.disponible === true
-          ? califExt.total_resenas
-          : Number(evento.resena_total || 0),
-        resena_estado: califExt?.mensaje || (Number(evento.resena_total) === 0 ? 'Sin calificaciones aún' : 'Con opiniones')
+        // --- Nomenclatura Oficial BD (Anaís / Rúbrica) ---
+        id_evento: evento.id_evento,
+        nombre_evento: evento.nombre_evento,
+        descripcion_evento: evento.descripcion_evento,
+        lugar_evento: evento.lugar_evento,
+        fecha_evento: evento.fecha_evento,
+        hora_evento: evento.hora_evento,
+        imagen_evento: evento.imagen_evento,
+        precio_final_evento: Number(evento.precio_final_evento),
+        tipo_evento: evento.tipo_evento,
+        categoria_evento: evento.categoria_evento,
+        estado_evento: evento.estado_evento,
+        stock_actual: evento.stock_actual,
+        promedio_calificacion: promCalif,
+        total_resenas: totResenas,
+        fecha_creacion: evento.fecha_creacion,
+        es_pasado: esPasado,
+        resena_estado: califExt?.mensaje || (totResenas === 0 ? 'Sin calificaciones aún' : 'Con opiniones'),
+
+        // --- ALIAS DE COMPATIBILIDAD (Para que el Frontend de Amalia no se caiga mientras migra) ---
+        evento_id: evento.id_evento,
+        evento_titulo: evento.nombre_evento,
+        evento_descripcion: evento.descripcion_evento,
+        evento_lugar: evento.lugar_evento,
+        evento_fecha: evento.fecha_evento,
+        evento_hora: evento.hora_evento,
+        evento_imagen: evento.imagen_evento,
+        evento_precio_final: Number(evento.precio_final_evento),
+        evento_tipo: evento.tipo_evento,
+        evento_categoria: evento.categoria_evento,
+        evento_estado: evento.estado_evento,
+        inventario_stock: evento.stock_actual,
+        resena_calificacion_promedio: promCalif
       };
     });
 
@@ -175,9 +206,7 @@ const getEvents = async (req, res) => {
 
 /**
  * GET /api/catalogo/eventos/:id (y /api/v1/events/:id)
- * Obtiene el detalle completo de un evento con campo 'es_pasado',
- * diferenciando 404 (no encontrado) de 500 (error de BD),
- * e integrando reseñas completas desde el módulo de Reseñas (BE2).
+ * Detalle completo con nueva nomenclatura oficial y alias para el frontend.
  */
 const getEventById = async (req, res) => {
   try {
@@ -186,10 +215,10 @@ const getEventById = async (req, res) => {
     const { data, error } = await supabase
       .from('eventos')
       .select('*')
-      .eq('evento_id', id)
+      .eq('id_evento', id)
       .single();
 
-    // Diferenciación de errores (Corrección 4: 404 vs 500)
+    // Manejo de errores (404 vs 500)
     if (error) {
       if (error.code === 'PGRST116' || error.message.includes('JSON object requested, multiple (or no) rows returned')) {
         return res.status(404).json({
@@ -211,25 +240,46 @@ const getEventById = async (req, res) => {
       });
     }
 
-    // Campo calculado 'es_pasado'
-    const es_pasado = new Date(data.evento_fecha) < new Date();
-
-    // Integración BE2: Consulta a microservicio de Reseñas con Graceful Degradation
+    const es_pasado = new Date(data.fecha_evento) < new Date();
     const resenasDetalle = await consultarResenasEvento(id);
 
     return res.status(200).json({
       success: true,
       data: {
-        ...data,
-        resena_calificacion_promedio: resenasDetalle.disponible === true 
-          ? resenasDetalle.promedio 
-          : Number(data.resena_calificacion_promedio || 0),
-        resena_total: resenasDetalle.disponible === true 
-          ? resenasDetalle.total_resenas 
-          : Number(data.resena_total || 0),
+        // Oficial
+        id_evento: data.id_evento,
+        nombre_evento: data.nombre_evento,
+        descripcion_evento: data.descripcion_evento,
+        lugar_evento: data.lugar_evento,
+        fecha_evento: data.fecha_evento,
+        hora_evento: data.hora_evento,
+        imagen_evento: data.imagen_evento,
+        precio_final_evento: Number(data.precio_final_evento),
+        tipo_evento: data.tipo_evento,
+        categoria_evento: data.categoria_evento,
+        estado_evento: data.estado_evento,
+        stock_actual: data.stock_actual,
+        promedio_calificacion: Number(data.promedio_calificacion || 0),
+        total_resenas: Number(data.total_resenas || 0),
+        fecha_creacion: data.fecha_creacion,
         es_pasado,
         resenas_opiniones: resenasDetalle.resenas || [],
-        resena_estado: resenasDetalle.estado_resenas || (resenasDetalle.resenas?.length === 0 ? 'Sin calificaciones aún' : 'Disponible')
+        resena_estado: resenasDetalle.estado_resenas || (resenasDetalle.resenas?.length === 0 ? 'Sin calificaciones aún' : 'Disponible'),
+
+        // Alias retrocompatibles
+        evento_id: data.id_evento,
+        evento_titulo: data.nombre_evento,
+        evento_descripcion: data.descripcion_evento,
+        evento_lugar: data.lugar_evento,
+        evento_fecha: data.fecha_evento,
+        evento_hora: data.hora_evento,
+        evento_imagen: data.imagen_evento,
+        evento_precio_final: Number(data.precio_final_evento),
+        evento_tipo: data.tipo_evento,
+        evento_categoria: data.categoria_evento,
+        evento_estado: data.estado_evento,
+        inventario_stock: data.stock_actual,
+        resena_calificacion_promedio: Number(data.promedio_calificacion || 0)
       }
     });
   } catch (error) {
@@ -242,16 +292,14 @@ const getEventById = async (req, res) => {
 };
 
 /**
- * PUT /api/catalogo/eventos/:id/stock (Alineado al contrato con Entradas / Inventario)
- * Recibe nuevo_stock y token_sesion.
- * Si nuevo_stock === 0, actualiza automáticamente evento_estado = 'agotado'.
+ * PUT /api/catalogo/eventos/:id/stock (Contrato Entradas ↔ Catálogo)
+ * Actualiza stock_actual y estado_evento en Supabase.
  */
 const updateStock = async (req, res) => {
   try {
     const { id } = req.params;
     const { nuevo_stock, token_sesion } = req.body;
 
-    // Validación de token de sesión exigido por contrato para trazabilidad
     if (!token_sesion || typeof token_sesion !== 'string' || token_sesion.trim() === '') {
       return res.status(401).json({
         success: false,
@@ -259,7 +307,6 @@ const updateStock = async (req, res) => {
       });
     }
 
-    // Validación de nuevo_stock según contrato (entero >= 0)
     if (nuevo_stock === undefined || typeof nuevo_stock !== 'number' || nuevo_stock < 0 || !Number.isInteger(nuevo_stock)) {
       return res.status(400).json({
         success: false,
@@ -270,8 +317,8 @@ const updateStock = async (req, res) => {
     // Verificar si el evento existe en Catálogo
     const { data: existingEvent, error: findError } = await supabase
       .from('eventos')
-      .select('evento_id, evento_estado, inventario_stock')
-      .eq('evento_id', id)
+      .select('id_evento, estado_evento, stock_actual')
+      .eq('id_evento', id)
       .single();
 
     if (findError || !existingEvent) {
@@ -281,23 +328,20 @@ const updateStock = async (req, res) => {
       });
     }
 
-    // Regla de negocio: Si el stock llega a 0, marcar agotado automáticamente.
-    // Si tenía stock 0 y ahora se añade stock (> 0), reactivar como disponible.
-    let nuevoEstado = existingEvent.evento_estado;
+    let nuevoEstado = existingEvent.estado_evento;
     if (nuevo_stock === 0) {
       nuevoEstado = 'agotado';
-    } else if (existingEvent.evento_estado === 'agotado' && nuevo_stock > 0) {
+    } else if (existingEvent.estado_evento === 'agotado' && nuevo_stock > 0) {
       nuevoEstado = 'disponible';
     }
 
-    // Actualizar en base de datos
     const { data: updatedEvent, error: updateError } = await supabase
       .from('eventos')
       .update({
-        inventario_stock: nuevo_stock,
-        evento_estado: nuevoEstado
+        stock_actual: nuevo_stock,
+        estado_evento: nuevoEstado
       })
-      .eq('evento_id', id)
+      .eq('id_evento', id)
       .select()
       .single();
 
@@ -313,9 +357,13 @@ const updateStock = async (req, res) => {
       success: true,
       mensaje: 'Stock de Catálogo actualizado correctamente',
       data: {
-        evento_id: updatedEvent.evento_id,
-        inventario_stock: updatedEvent.inventario_stock,
-        evento_estado: updatedEvent.evento_estado
+        id_evento: updatedEvent.id_evento,
+        stock_actual: updatedEvent.stock_actual,
+        estado_evento: updatedEvent.estado_evento,
+        // Alias
+        evento_id: updatedEvent.id_evento,
+        inventario_stock: updatedEvent.stock_actual,
+        evento_estado: updatedEvent.estado_evento
       }
     });
   } catch (error) {
@@ -329,8 +377,6 @@ const updateStock = async (req, res) => {
 
 /**
  * GET /api/catalogo/eventos/:id/info-servicio (BE3)
- * Endpoint de consulta ligera para que otros microservicios obtengan
- * datos esenciales: id y nombre para Reseñas, precio para Promociones.
  */
 const getEventServiceInfo = async (req, res) => {
   try {
@@ -338,8 +384,8 @@ const getEventServiceInfo = async (req, res) => {
 
     const { data, error } = await supabase
       .from('eventos')
-      .select('evento_id, evento_titulo, evento_precio_final, evento_estado, evento_fecha')
-      .eq('evento_id', id)
+      .select('id_evento, nombre_evento, precio_final_evento, estado_evento, fecha_evento')
+      .eq('id_evento', id)
       .single();
 
     if (error || !data) {
@@ -352,11 +398,14 @@ const getEventServiceInfo = async (req, res) => {
     return res.status(200).json({
       success: true,
       data: {
-        id_evento: data.evento_id,
-        titulo: data.evento_titulo,
-        precio_final: Number(data.evento_precio_final),
-        estado: data.evento_estado,
-        fecha: data.evento_fecha
+        id_evento: data.id_evento,
+        nombre_evento: data.nombre_evento,
+        precio_final_evento: Number(data.precio_final_evento),
+        estado_evento: data.estado_evento,
+        fecha_evento: data.fecha_evento,
+        // Alias
+        titulo: data.nombre_evento,
+        precio_final: Number(data.precio_final_evento)
       }
     });
   } catch (error) {

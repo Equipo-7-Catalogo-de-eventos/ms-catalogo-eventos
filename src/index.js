@@ -245,9 +245,11 @@ const swaggerDocument = {
                     data: {
                       type: 'object',
                       properties: {
+                        id_evento: { type: 'string' },
+                        stock_actual: { type: 'integer' },
+                        estado_evento: { type: 'string' },
                         evento_id: { type: 'string' },
-                        inventario_stock: { type: 'integer' },
-                        evento_estado: { type: 'string' }
+                        inventario_stock: { type: 'integer' }
                       }
                     }
                   }
@@ -268,21 +270,24 @@ const swaggerDocument = {
       Evento: {
         type: 'object',
         properties: {
-          evento_id: { type: 'string', example: 'evt-101' },
-          evento_titulo: { type: 'string', example: 'Feria de Innovación TITEC' },
-          evento_descripcion: { type: 'string', example: 'Muestra anual de proyectos.' },
-          evento_lugar: { type: 'string', example: 'Auditorio Principal UV' },
-          evento_fecha: { type: 'string', format: 'date-time', example: '2026-10-15T10:00:00Z' },
-          evento_hora: { type: 'string', example: '10:00' },
-          evento_imagen: { type: 'string', format: 'uri', example: 'https://ticketu.cl/img/feria-titec.jpg' },
-          evento_precio_final: { type: 'number', example: 0 },
-          evento_tipo: { type: 'string', enum: ['gratuito', 'pagado'], example: 'gratuito' },
-          evento_categoria: { type: 'string', example: 'academico' },
-          evento_estado: { type: 'string', enum: ['disponible', 'agotado', 'pasado'], example: 'disponible' },
-          inventario_stock: { type: 'integer', example: 150 },
-          resena_calificacion_promedio: { type: 'number', example: 4.8 },
-          resena_total: { type: 'integer', example: 12 },
-          es_pasado: { type: 'boolean', example: false }
+          id_evento: { type: 'string', example: 'evt-101' },
+          nombre_evento: { type: 'string', example: 'Feria de Innovación TITEC' },
+          descripcion_evento: { type: 'string', example: 'Muestra anual de proyectos de ingeniería y tecnología.' },
+          lugar_evento: { type: 'string', example: 'Auditorio Principal UV' },
+          fecha_evento: { type: 'string', format: 'date-time', example: '2026-10-15T10:00:00Z' },
+          hora_evento: { type: 'string', example: '10:00' },
+          imagen_evento: { type: 'string', format: 'uri', example: 'https://ticketu.cl/img/feria-titec.jpg' },
+          precio_final_evento: { type: 'number', example: 0 },
+          tipo_evento: { type: 'string', enum: ['gratuito', 'pagado'], example: 'gratuito' },
+          categoria_evento: { type: 'string', example: 'academico' },
+          estado_evento: { type: 'string', enum: ['disponible', 'agotado', 'pasado', 'cancelado'], example: 'disponible' },
+          stock_actual: { type: 'integer', example: 150 },
+          promedio_calificacion: { type: 'number', example: 4.8 },
+          total_resenas: { type: 'integer', example: 12 },
+          fecha_creacion: { type: 'string', format: 'date-time' },
+          es_pasado: { type: 'boolean', example: false },
+          evento_titulo: { type: 'string', description: 'Alias de compatibilidad con Frontend', example: 'Feria de Innovación TITEC' },
+          evento_fecha: { type: 'string', description: 'Alias de compatibilidad con Frontend' }
         }
       },
       EventoDetalle: {
