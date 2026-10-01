@@ -244,7 +244,7 @@ const getEventById = async (req, res) => {
     const { data, error } = await supabase
       .from('eventos')
       .select('*')
-      .or(`id_evento.eq.${id},evento_id.eq.${id}`)
+      .eq('id_evento', id)
       .single();
 
     // Manejo de errores (404 vs 500)
@@ -362,11 +362,18 @@ const getEventReviews = async (req, res) => {
     const limite = Math.max(1, parseInt(req.query.limite, 10) || 3);
 
     // Consultar el evento en la BD local
-    const { data: evento } = await supabase
+    const { data: evento, error: eventError } = await supabase
       .from('eventos')
       .select('*')
-      .or(`id_evento.eq.${id},evento_id.eq.${id}`)
+      .eq('id_evento', id)
       .single();
+
+    if (eventError || !evento) {
+      return res.status(404).json({
+        success: false,
+        message: `Evento con ID '${id}' no encontrado`
+      });
+    }
 
     const dbPromedio = evento?.promedio_calificacion !== undefined && evento?.promedio_calificacion !== null
       ? Number(evento.promedio_calificacion)
@@ -440,7 +447,7 @@ const updateStock = async (req, res) => {
     const { data: existingEvent, error: findError } = await supabase
       .from('eventos')
       .select('id_evento, estado_evento, stock_actual')
-      .or(`id_evento.eq.${id},evento_id.eq.${id}`)
+      .eq('id_evento', id)
       .single();
 
     if (findError || !existingEvent) {
@@ -463,7 +470,7 @@ const updateStock = async (req, res) => {
         stock_actual: nuevo_stock,
         estado_evento: nuevoEstado
       })
-      .or(`id_evento.eq.${id},evento_id.eq.${id}`)
+      .eq('id_evento', id)
       .select()
       .single();
 
@@ -506,7 +513,7 @@ const getEventServiceInfo = async (req, res) => {
     const { data, error } = await supabase
       .from('eventos')
       .select('*')
-      .or(`id_evento.eq.${id},evento_id.eq.${id}`)
+      .eq('id_evento', id)
       .single();
 
     if (error || !data) {
