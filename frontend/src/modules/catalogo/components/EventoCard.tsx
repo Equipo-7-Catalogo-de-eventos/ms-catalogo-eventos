@@ -10,8 +10,8 @@ interface EventoCardProps {
 
 export default function EventoCard({ evento }: EventoCardProps) {
     const eventoEsPasado = esPasado(evento);
-    const esAgotado = evento.evento_estado === "agotado";
-    const esCancelado = evento.evento_estado === "cancelado";
+    const esAgotado = evento.estado_evento === "agotado";
+    const esCancelado = evento.estado_evento === "cancelado";
     const esAtenuada = esAgotado || esCancelado || eventoEsPasado;
 
     const estadoCardClass =
@@ -23,18 +23,18 @@ export default function EventoCard({ evento }: EventoCardProps) {
             ? styles.cardPasado
             : styles.cardDisponible;
 
-    const precioTexto = formatearPrecio(evento.evento_precio_final);
+    const precioTexto = formatearPrecio(evento.precio_final_evento);
     const esGratis = precioTexto === "Gratis";
 
     return (
         <Link
-            href={`/catalogo/${evento.evento_id}`}
+            href={`/catalogo/${evento.id_evento}`}
             className={`${styles.card} ${estadoCardClass}`}
         >
             <div className={styles.imagenContenedor}>
                 <ImagenEvento
-                    src={evento.evento_imagen}
-                    alt={evento.evento_titulo}
+                    src={evento.imagen_evento}
+                    alt={evento.nombre_evento}
                     alto={160}
                     radio={8}
                     apagada={esAtenuada}
@@ -59,18 +59,18 @@ export default function EventoCard({ evento }: EventoCardProps) {
                     </span>
                 )}
 
-                {/* Calificación y total reseñas en esquina inferior derecha (solo si resena_total > 0) */}
-                {evento.resena_total > 0 && (
+                {/* Calificación y total reseñas en esquina inferior derecha (solo si total_resenas > 0) */}
+                {evento.total_resenas > 0 && (
                     <span className={styles.pillCalificacion}>
-                        ★ {evento.resena_calificacion_promedio.toFixed(1)} ({evento.resena_total})
+                        ★ {evento.promedio_calificacion.toFixed(1)} ({evento.total_resenas})
                     </span>
                 )}
             </div>
 
             <div className={styles.tarjetaInfo}>
-                <h3 className={styles.tarjetaTitulo}>{evento.evento_titulo}</h3>
+                <h3 className={styles.tarjetaTitulo}>{evento.nombre_evento}</h3>
                 <p className={styles.tarjetaDetalle}>
-                    {evento.evento_lugar} · {formatearFecha(evento.evento_fecha)}, {evento.evento_hora}
+                    {evento.lugar_evento} · {formatearFecha(evento.fecha_evento)}, {evento.hora_evento}
                 </p>
                 <span className={`${styles.tarjetaPrecio} ${esGratis ? styles.precioGratis : ""}`}>
                     {precioTexto}

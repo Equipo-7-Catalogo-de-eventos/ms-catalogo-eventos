@@ -57,10 +57,10 @@ export default async function DetalleEventoPlaceholder({
     }
 
     const eventoEsPasado = esPasado(evento);
-    const esAgotado = evento.evento_estado === "agotado";
-    const esCancelado = evento.evento_estado === "cancelado";
+    const esAgotado = evento.estado_evento === "agotado";
+    const esCancelado = evento.estado_evento === "cancelado";
     const esAtenuada = esAgotado || esCancelado || eventoEsPasado;
-    const precioTexto = formatearPrecio(evento.evento_precio_final);
+    const precioTexto = formatearPrecio(evento.precio_final_evento);
     const precioEsGratis = precioTexto === "Gratis";
 
     return (
@@ -92,8 +92,8 @@ export default async function DetalleEventoPlaceholder({
 
             {/* b. Imagen banner */}
             <ImagenEvento
-                src={evento.evento_imagen}
-                alt={evento.evento_titulo}
+                src={evento.imagen_evento}
+                alt={evento.nombre_evento}
                 alto={320}
                 apagada={esAtenuada}
                 className={styles.bannerImagen}
@@ -101,7 +101,7 @@ export default async function DetalleEventoPlaceholder({
 
             {/* c. Título h1 centrado, badge de estado y categoría */}
             <div className={styles.cabeceraDetalle}>
-                <h1 className={styles.tituloDetalle}>{evento.evento_titulo}</h1>
+                <h1 className={styles.tituloDetalle}>{evento.nombre_evento}</h1>
 
                 {(esAgotado || esCancelado || eventoEsPasado) && (
                     <span
@@ -121,28 +121,28 @@ export default async function DetalleEventoPlaceholder({
                     </span>
                 )}
 
-                {evento.evento_categoria && (
+                {evento.categoria_evento && (
                     <span className={styles.categoriaDetalle}>
-                        {evento.evento_categoria.charAt(0).toUpperCase() +
-                            evento.evento_categoria.slice(1)}
+                        {evento.categoria_evento.charAt(0).toUpperCase() +
+                            evento.categoria_evento.slice(1)}
                     </span>
                 )}
 
                 {/* Resumen de calificación */}
-                {evento.resena_total > 0 ? (
+                {evento.total_resenas > 0 ? (
                     <div
                         className={styles.calificacionDetalle}
                         role="img"
-                        aria-label={`Calificación ${evento.resena_calificacion_promedio.toFixed(1)} de 5, basada en ${evento.resena_total} ${evento.resena_total === 1 ? "reseña" : "reseñas"}`}
+                        aria-label={`Calificación ${evento.promedio_calificacion.toFixed(1)} de 5, basada en ${evento.total_resenas} ${evento.total_resenas === 1 ? "reseña" : "reseñas"}`}
                     >
                         <span className={styles.estrellasContenedor}>
-                            <Estrellas valor={evento.resena_calificacion_promedio} tamano={20} />
+                            <Estrellas valor={evento.promedio_calificacion} tamano={20} />
                         </span>
                         <span className={styles.calificacionPromedio}>
-                            {evento.resena_calificacion_promedio.toFixed(1)}
+                            {evento.promedio_calificacion.toFixed(1)}
                         </span>
                         <span className={styles.calificacionTotal}>
-                            ({evento.resena_total} {evento.resena_total === 1 ? "reseña" : "reseñas"})
+                            ({evento.total_resenas} {evento.total_resenas === 1 ? "reseña" : "reseñas"})
                         </span>
                     </div>
                 ) : (
@@ -153,7 +153,7 @@ export default async function DetalleEventoPlaceholder({
             {/* d. Recuadro de información */}
             <section className={styles.panelInfo} aria-label="Información del evento">
                 <h2 className={styles.subtituloDetalle}>Descripción</h2>
-                <p className={styles.descripcionTexto}>{evento.evento_descripcion}</p>
+                <p className={styles.descripcionTexto}>{evento.descripcion_evento}</p>
 
                 <hr className={styles.separadorPanel} />
 
@@ -176,7 +176,7 @@ export default async function DetalleEventoPlaceholder({
                             </svg>
                         </span>
                         <dt className={styles.etiquetaDato}>Lugar:</dt>
-                        <dd className={styles.valorDato}>{evento.evento_lugar}</dd>
+                        <dd className={styles.valorDato}>{evento.lugar_evento}</dd>
                     </div>
 
                     <div className={styles.filaDato}>
@@ -200,7 +200,7 @@ export default async function DetalleEventoPlaceholder({
                         </span>
                         <dt className={styles.etiquetaDato}>Fecha:</dt>
                         <dd className={styles.valorDato}>
-                            {formatearFechaLarga(evento.evento_fecha)}
+                            {formatearFechaLarga(evento.fecha_evento)}
                         </dd>
                     </div>
 
@@ -222,7 +222,7 @@ export default async function DetalleEventoPlaceholder({
                             </svg>
                         </span>
                         <dt className={styles.etiquetaDato}>Horario:</dt>
-                        <dd className={styles.valorDato}>{evento.evento_hora} hrs</dd>
+                        <dd className={styles.valorDato}>{evento.hora_evento} hrs</dd>
                     </div>
 
                     <div className={styles.filaDato}>
@@ -275,11 +275,11 @@ export default async function DetalleEventoPlaceholder({
                             <dt className={styles.etiquetaDato}>Entradas disponibles:</dt>
                             <dd
                                 className={`${styles.valorDato} ${
-                                    evento.inventario_stock === 0 ? styles.badgeAgotado : ""
+                                    evento.stock_actual === 0 ? styles.badgeAgotado : ""
                                 }`}
-                                style={evento.inventario_stock === 0 ? { color: "var(--color-peligro-texto)", fontWeight: 600 } : {}}
+                                style={evento.stock_actual === 0 ? { color: "var(--color-peligro-texto)", fontWeight: 600 } : {}}
                             >
-                                {evento.inventario_stock === 0 ? "Agotadas" : formatearNumero(evento.inventario_stock)}
+                                {evento.stock_actual === 0 ? "Agotadas" : formatearNumero(evento.stock_actual)}
                             </dd>
                         </div>
                     )}
@@ -299,10 +299,10 @@ export default async function DetalleEventoPlaceholder({
                 {!esAgotado && !esCancelado && !eventoEsPasado ? (
                     // TODO: confirmar con el Grupo 3 (Entradas) la ruta y el parámetro del flujo de compra.
                     <Link
-                        href={`/entradas?eventoId=${encodeURIComponent(evento.evento_id)}`}
+                        href={`/entradas?eventoId=${encodeURIComponent(evento.id_evento)}`}
                         className={styles.botonCompra}
                     >
-                        {evento.evento_tipo === "gratuito" ? "Reservar" : "Comprar"}
+                        {evento.tipo_evento === "gratuito" ? "Reservar" : "Comprar"}
                     </Link>
                 ) : esCancelado ? (
                     <>
@@ -320,7 +320,7 @@ export default async function DetalleEventoPlaceholder({
                             disabled
                             className={`${styles.botonCompra} ${styles.botonCompraDeshabilitado}`}
                         >
-                            {evento.evento_tipo === "gratuito" ? "Reservar" : "Comprar"}
+                            {evento.tipo_evento === "gratuito" ? "Reservar" : "Comprar"}
                         </button>
                         <p className={styles.textoEstadoAviso}>
                             {esAgotado
@@ -336,8 +336,8 @@ export default async function DetalleEventoPlaceholder({
                 <ResumenResenas 
                     resumen={resumenResenas} 
                     eventoId={eventoId} 
-                    imagenEvento={evento.evento_imagen} 
-                    tituloEvento={evento.evento_titulo} 
+                    imagenEvento={evento.imagen_evento} 
+                    tituloEvento={evento.nombre_evento} 
                 />
             </div>
         </div>
