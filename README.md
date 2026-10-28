@@ -67,10 +67,11 @@ PORT=4000
 SUPABASE_URL=https://tu-proyecto.supabase.co
 SUPABASE_KEY=tu-anon-key
 
-# Microservicios externos (BE2)
-PANEL_ORGANIZADOR_URL=http://ms-panel-organizador:4001
-RESENAS_URL=http://ms-resenas:4002
-ENTRADAS_URL=http://ms-entradas:4003
+# Microservicios externos (Red plataforma-eventos-net / Gateway)
+RESENAS_SERVICE_URL=http://resenas-service:3000
+ORGANIZADOR_SERVICE_URL=http://organizador-service:3000
+ENTRADAS_SERVICE_URL=http://entradas-service:3000
+EXTERNAL_TIMEOUT_MS=500
 ```
 
 ---
@@ -94,17 +95,21 @@ npm start
 
 ---
 
-## Ejecución con Docker
+## Ejecución con Docker (Red Compartida plataforma-eventos-net)
 
-Asegúrate de tener la red compartida creada:
+El microservicio está preparado para integrarse al **API Gateway** central de TicketU ([FWizav/backendticketU](https://github.com/FWizav/backendticketU)).
+
+1. Crear la red compartida (si no existe):
 ```bash
-docker network create plataforma-eventos-net || true
+docker network create plataforma-eventos-net 2>/dev/null || true
 ```
 
-Construir y levantar el contenedor:
+2. Construir y levantar el contenedor:
 ```bash
 docker compose up -d --build
 ```
+
+El servicio se registra en la red con el nombre de contenedor `ms-catalogo-eventos` y el alias de red `catalogo-service` en el puerto `4000`.
 
 ---
 
@@ -114,7 +119,12 @@ docker compose up -d --build
 | :---: | :--- | :--- |
 | `GET` | `/health` | Chequeo de salud del servicio |
 | `GET` | `/api-docs` | Documentación interactiva Swagger OpenAPI 3.0 |
-| `GET` | `/api/catalogo/eventos` | Listar eventos con filtros avanzados, búsqueda y paginación |
-| `GET` | `/api/catalogo/eventos/:id` | Detalle del evento con notas y campo `es_pasado` |
-| `GET` | `/api/catalogo/eventos/:id/info-servicio` | Datos mínimos para Reseñas y Promociones (BE3) |
+| `GET` | `/api/catalogo/eventos` | Listar eventos con filtros avanzados, búsqueda multivariable y paginación |
+| `GET` | `/api/catalogo/eventos/:id` | Detalle completo del evento y campo calculado `es_pasado` |
+| `GET` | `/api/catalogo/eventos/:id/resenas` | Consulta de estrellas y opiniones a Reseñas con fallback seguro |
+| `GET` | `/api/catalogo/eventos/:id/info-servicio` | Datos mínimos para microservicios de Reseñas y Promociones (BE3) |
 | `PUT` | `/api/catalogo/eventos/:id/stock` | Actualizar stock desde Entradas/Inventario (conforme a contrato) |
+
+Para ver el detalle completo de las pruebas, capturas y respuestas HTTP de integración, consultar:  
+👉 **[Guía y Evidencias de Integración (docs/EVIDENCIAS_INTEGRACION.md)](docs/EVIDENCIAS_INTEGRACION.md)**
+

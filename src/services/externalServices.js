@@ -3,9 +3,9 @@
  * Implementa SLAs, timeouts y resiliencia (Graceful Degradation / Fallback).
  */
 
-const RESENAS_SERVICE_URL = process.env.RESENAS_URL || 'http://localhost:4002';
-const PANEL_ORGANIZADOR_URL = process.env.PANEL_ORGANIZADOR_URL || 'http://localhost:4001';
-const REQUEST_TIMEOUT_MS = 500; // SLA acordado en contratos < 500ms
+const RESENAS_SERVICE_URL = process.env.RESENAS_SERVICE_URL || process.env.RESENAS_URL || 'http://resenas-service:3000';
+const PANEL_ORGANIZADOR_URL = process.env.ORGANIZADOR_SERVICE_URL || process.env.PANEL_ORGANIZADOR_URL || 'http://organizador-service:3000';
+const REQUEST_TIMEOUT_MS = parseInt(process.env.EXTERNAL_TIMEOUT_MS, 10) || 500; // SLA acordado en contratos < 500ms
 
 /**
  * Consulta calificaciones básicas en bloque a Reseñas.

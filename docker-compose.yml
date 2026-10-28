@@ -13,8 +13,12 @@ services:
       - PORT=4000
       - NODE_ENV=production
     networks:
-      - plataforma-eventos-net
+      plataforma-eventos-net:
+        aliases:
+          - catalogo-service
+          - ms-catalogo-eventos
 
 networks:
   plataforma-eventos-net:
     external: true
+
