@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import styles from "../styles/catalogo.module.css";
 import type { ResumenResenas as TResumenResenas } from "../types";
 import { obtenerIniciales, formatearFechaRelativa, formatearNumero } from "../formato";
@@ -97,20 +98,24 @@ export default function ResumenResenas({ resumen, eventoId, imagenEvento, titulo
                             </div>
 
                             <div className={styles.resumenResenasBotonCtaContainer}>
-                                {/* TODO: navegar a la página completa del módulo Reseñas (Grupo 6) cuando esté integrada. */}
-                                <button type="button" className={styles.botonPrincipal}>
+                                <Link
+                                    href={`/catalogo/${encodeURIComponent(eventoId)}/resenas`}
+                                    className={styles.botonPrincipal}
+                                >
                                     VER TODAS LAS RESEÑAS
-                                </button>
+                                </Link>
                             </div>
                         </>
                     ) : (
                         <div className={styles.resumenResenasVacio}>
                             <h2 className={styles.resumenResenasVacioTitulo}>Sin calificaciones aún</h2>
                             <p className={styles.resumenResenasVacioDesc}>Sé la primera persona en compartir tu experiencia.</p>
-                            {/* TODO: navegar a la página completa del módulo Reseñas (Grupo 6) cuando esté integrada. */}
-                            <button type="button" className={styles.botonPrincipal}>
+                            <Link
+                                href={`/catalogo/${encodeURIComponent(eventoId)}/resenas`}
+                                className={styles.botonPrincipal}
+                            >
                                 ESCRIBE UNA RESEÑA
-                            </button>
+                            </Link>
                         </div>
                     )}
                 </div>

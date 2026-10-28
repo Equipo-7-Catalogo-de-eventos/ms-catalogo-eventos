@@ -9,7 +9,7 @@ import { eventosPrueba } from "./datosPrueba";
 import resenasPrueba from "./resenasPrueba.json";
 
 // Cambiar a false cuando el backend esté funcionando.
-const USAR_DATOS_PRUEBA = false;
+const USAR_DATOS_PRUEBA = true;
 
 // Simulación de la integración con Reseñas (Grupo 6).
 const USAR_DATOS_PRUEBA_RESENAS = true;

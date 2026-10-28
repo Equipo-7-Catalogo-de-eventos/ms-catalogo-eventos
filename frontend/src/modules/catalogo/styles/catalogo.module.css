@@ -1120,3 +1120,32 @@
     color: var(--color-secundario);
     margin: 0 0 16px 0;
 }
+
+.botonPrincipal {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    padding: 0 24px;
+    border-radius: var(--radio-boton);
+    background-color: var(--color-primario);
+    color: var(--color-fondo);
+    font-family: var(--font-familia-titulos);
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.2;
+    text-decoration: none;
+    cursor: pointer;
+    border: none;
+    transition: background-color 150ms ease;
+    box-sizing: border-box;
+}
+
+.botonPrincipal:hover {
+    background-color: var(--color-primario-hover);
+}
+
+.botonPrincipal:focus-visible {
+    outline: 2px solid var(--color-primario);
+    outline-offset: 2px;
+}

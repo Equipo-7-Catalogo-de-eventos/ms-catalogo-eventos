@@ -7,8 +7,8 @@ export interface Evento {
     nombre_evento: string;
     descripcion_evento: string;
     lugar_evento: string;
-    fecha_evento: string;          // timestamp ISO, ej. "2026-10-15T10:00:00+00:00"
-    hora_evento: string;           // "10:00"
+    fecha_evento: string;          
+    hora_evento: string;          
     imagen_evento: string;         // URL
     precio_final_evento: number;   // 0 = gratuito
     tipo_evento: TipoEvento;
@@ -42,10 +42,10 @@ export interface RespuestaDetalle {
 
 export interface Resena {
   usuario_id: string;
-  nombre_usuario: string;   // TODO: acordar con Reseñas; su contrato v1 no lo incluye
+  nombre_usuario: string;   
   calificacion: number;     // entero 1 a 5
   comentario?: string;
-  fecha: string;            // ISO 8601
+  fecha: string;            
 }
 export interface ResumenResenas {
   id_evento: string;
