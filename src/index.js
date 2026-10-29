@@ -323,7 +323,9 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 app.use('/api/catalogo/eventos', eventRoutes);
 app.use('/api/catalogo', eventRoutes);
 
-// Alias de retrocompatibilidad con frontend existente
+// Alias de retrocompatibilidad con frontend existente y microservicio de Entradas
+app.use('/api/v1/catalogo/eventos', eventRoutes);
+app.use('/api/v1/catalogo', eventRoutes);
 app.use('/api/v1/events', eventRoutes);
 
 app.get('/health', (req, res) => {
