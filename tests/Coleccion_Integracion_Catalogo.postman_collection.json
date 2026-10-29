@@ -1,0 +1,253 @@
+{
+  "info": {
+    "_postman_id": "e7-catalogo-qa-collection",
+    "name": "Coleccion_Integracion_Catalogo",
+    "description": "Colección oficial de pruebas de integración y calidad para ms-catalogo-eventos (Equipo 7 - TicketU)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "TC-CAT-01: Listar Eventos (200 OK)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/catalogo/eventos?page=1&limit=10",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "catalogo",
+            "eventos"
+          ],
+          "query": [
+            {
+              "key": "page",
+              "value": "1"
+            },
+            {
+              "key": "limit",
+              "value": "10"
+            }
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code es 200 OK\", function () { pm.response.to.have.status(200); });",
+              "pm.test(\"Respuesta contiene array de eventos\", function () { const data = pm.response.json(); pm.expect(data).to.have.property(\"data\"); pm.expect(data.data).to.be.an(\"array\"); });",
+              "pm.test(\"Tiempo de respuesta menor a 500ms (SLA)\", function () { pm.expect(pm.response.responseTime).to.be.below(500); });"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "TC-CAT-02: Búsqueda Multivariable (200 OK)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/catalogo/eventos?search=concierto",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "catalogo",
+            "eventos"
+          ],
+          "query": [
+            {
+              "key": "search",
+              "value": "concierto"
+            }
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code es 200 OK\", function () { pm.response.to.have.status(200); });",
+              "pm.test(\"Respuesta contiene filtro data\", function () { const data = pm.response.json(); pm.expect(data).to.have.property(\"data\"); });"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "TC-CAT-03: Evento No Existente (404 Not Found)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/catalogo/eventos/00000000-0000-0000-0000-000000000000",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "catalogo",
+            "eventos",
+            "00000000-0000-0000-0000-000000000000"
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code es 404 Not Found\", function () { pm.response.to.have.status(404); });",
+              "pm.test(\"Mensaje de error descriptivo\", function () { const data = pm.response.json(); pm.expect(data).to.have.property(\"error\"); });"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "TC-CAT-04: Actualización Stock Inválida (400 Bad Request)",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nuevo_stock\": -10\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/catalogo/eventos/{{evento_id}}/stock",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "catalogo",
+            "eventos",
+            "{{evento_id}}",
+            "stock"
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code es 400 Bad Request\", function () { pm.response.to.have.status(400); });",
+              "pm.test(\"Muestra mensaje de error por stock negativo\", function () { const data = pm.response.json(); pm.expect(data).to.have.property(\"message\"); });"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "TC-CAT-05: Actualización Stock Válida (200 OK)",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token_valid}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nuevo_stock\": 50\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/catalogo/eventos/{{evento_id}}/stock",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "catalogo",
+            "eventos",
+            "{{evento_id}}",
+            "stock"
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code es 200 OK\", function () { pm.response.to.have.status(200); });",
+              "pm.test(\"Confirmación de actualización\", function () { const data = pm.response.json(); pm.expect(data).to.have.property(\"stock\", 50); });"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "TC-CAT-06: Resiliencia Integración Reseñas (Graceful Degradation)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/catalogo/eventos/{{evento_id}}/resenas",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "catalogo",
+            "eventos",
+            "{{evento_id}}",
+            "resenas"
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code es 200 OK (Degradación Graciosa)\", function () { pm.response.to.have.status(200); });",
+              "pm.test(\"Responde con valor fallback cuando el servicio de reseñas no responde\", function () { const data = pm.response.json(); pm.expect(data).to.have.property(\"promedio\"); });"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:4000",
+      "type": "string"
+    },
+    {
+      "key": "evento_id",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "token_valid",
+      "value": "mock-token-qa-123",
+      "type": "string"
+    }
+  ]
+}
