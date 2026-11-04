@@ -33,4 +33,5 @@ SELECT id_evento, nombre_evento, stock_actual FROM eventos WHERE id_evento = 'ev
 
 **Captura (Después):**
 ![Estado actualizado del stock](evidencia_dsp_bd.png)
+
 *(Nota: El stock actual disminuyó a 144 unidades para el evento evt-101, confirmando el éxito de la integración)*
