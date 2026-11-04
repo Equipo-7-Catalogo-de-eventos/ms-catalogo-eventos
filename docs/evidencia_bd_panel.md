@@ -12,7 +12,7 @@ SELECT id_evento, nombre_evento, lugar_evento, descripcion_evento FROM eventos W
 
 **Captura (Antes):**
 
-![Estado inicial del stock](evidencia_bd_antes.png)
+![Estado inicial del stock](evidencia_panel_antes.png)
 
 *(Nota: Verificación de los datos base, con lugar "Parque Cultural" y descripción original, registrados previamente en el Catálogo)*
 
