@@ -813,9 +813,57 @@ const createEvent = async (req, res) => {
       data: persistedEvent || newEvent
     });
   } catch (error) {
+/**
+ * PATCH /api/catalogo/eventos/:id/estado
+ * Permite a Panel Organizador cambiar el estado de un evento (cancelar o finalizar/cerrar)
+ */
+const updateEventStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { estado_evento, estado } = req.body;
+    const nuevoEstado = (estado_evento || estado || 'cancelado').toLowerCase();
+
+    let updatedEvent = null;
+    try {
+      const resUpdate = await withTimeout(
+        supabase
+          .from('eventos')
+          .update({ estado_evento: nuevoEstado })
+          .eq('id_evento', id)
+          .select()
+          .single()
+      );
+      if (!resUpdate.error && resUpdate.data) {
+        updatedEvent = resUpdate.data;
+      }
+    } catch (e) {
+      // ignore
+    }
+
+    // Actualizar en store local
+    const local = eventStore.getById(id);
+    if (local) {
+      local.estado_evento = nuevoEstado;
+      local.evento_estado = nuevoEstado;
+      if (!updatedEvent) updatedEvent = local;
+    }
+
+    if (!updatedEvent) {
+      return res.status(404).json({
+        success: false,
+        message: `Evento con ID '${id}' no encontrado.`
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      mensaje: `Estado del evento actualizado a '${nuevoEstado}'.`,
+      data: updatedEvent
+    });
+  } catch (error) {
     return res.status(500).json({
       success: false,
-      message: 'Error al registrar evento en Catálogo',
+      message: 'Error al actualizar estado del evento en Catálogo.',
       error: error.message
     });
   }
@@ -827,5 +875,6 @@ module.exports = {
   getEventReviews,
   updateStock,
   getEventServiceInfo,
-  createEvent
+  createEvent,
+  updateEventStatus
 };
