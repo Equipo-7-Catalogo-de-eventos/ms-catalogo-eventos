@@ -2,8 +2,75 @@ const supabase = require('../config/supabase');
 const eventStore = require('../data/eventStore');
 const {
   consultarCalificacionesBasicas,
-  consultarResenasEvento
+  consultarResenasEvento,
+  consultarEventosProximosOrganizador
 } = require('../services/externalServices');
+
+// Mapeo oficial de campos de Panel Organizador a Catálogo (CONTRATO_PANEL_CATALOGO.md)
+function mapearEventoPanel(evPanel) {
+  const id = evPanel.id_evento || evPanel.evento_id;
+  const nombre = evPanel.nombre_evento || evPanel.titulo || evPanel.evento_titulo;
+  const desc = evPanel.descripcion || evPanel.descripcion_evento || '';
+  const lugar = evPanel.direccion_evento || evPanel.lugar_evento || evPanel.lugar || 'Por definir';
+  const fecha = evPanel.fecha_evento || evPanel.fecha || new Date().toISOString();
+  const hora = evPanel.hora_evento || evPanel.hora || '20:00';
+  const img = evPanel.imagen || evPanel.imagen_evento || 'https://picsum.photos/seed/' + id + '/800/400';
+  const precio = Number(evPanel.precio ?? evPanel.precio_final_evento ?? 0);
+  
+  let tipo = 'pagado';
+  const rawTipo = String(evPanel.tipo_entrada || evPanel.tipo_evento || '').toUpperCase();
+  if (rawTipo.includes('GRAT') || precio === 0) {
+    tipo = 'gratuito';
+  }
+
+  let estado = 'disponible';
+  const rawEstado = String(evPanel.estado_disponibilidad || evPanel.estado_gestion || evPanel.estado_evento || '').toUpperCase();
+  if (rawEstado.includes('AGOT')) estado = 'agotado';
+  else if (rawEstado.includes('PAS')) estado = 'pasado';
+  else if (rawEstado.includes('CANC')) estado = 'cancelado';
+
+  return {
+    id_evento: id,
+    nombre_evento: nombre,
+    descripcion_evento: desc,
+    lugar_evento: lugar,
+    fecha_evento: new Date(fecha).toISOString(),
+    hora_evento: hora,
+    imagen_evento: img,
+    categoria_evento: evPanel.categoria || evPanel.categoria_evento || 'general',
+    precio_final_evento: precio,
+    tipo_evento: tipo,
+    estado_evento: estado,
+    stock_actual: Number(evPanel.stock_actual ?? 100),
+    promedio_calificacion: Number(evPanel.promedio_calificacion ?? 0),
+    total_resenas: Number(evPanel.total_resenas ?? 0)
+  };
+}
+
+// Sincronización proactiva con Panel Organizador al recibir consultas si la BD tiene pocos eventos
+let sincronizacionEjecutada = false;
+async function sincronizarConPanelSiEsNecesario() {
+  if (sincronizacionEjecutada) return;
+  sincronizacionEjecutada = true;
+  try {
+    const eventosPanel = await consultarEventosProximosOrganizador(10);
+    if (Array.isArray(eventosPanel) && eventosPanel.length > 0) {
+      for (const ev of eventosPanel) {
+        const mapeado = mapearEventoPanel(ev);
+        if (mapeado.id_evento) {
+          eventStore.events.unshift(mapeado);
+          try {
+            await supabase.from('eventos').upsert(mapeado, { onConflict: 'id_evento' });
+          } catch (e) {
+            // ignore
+          }
+        }
+      }
+    }
+  } catch (err) {
+    // ignore
+  }
+}
 
 const withTimeout = (promise, ms = 5000) => {
   return Promise.race([
@@ -19,6 +86,9 @@ const withTimeout = (promise, ms = 5000) => {
  */
 const getEvents = async (req, res) => {
   try {
+    // Sincronizar proactivamente eventos de Panel si están disponibles
+    await sincronizarConPanelSiEsNecesario();
+
     const {
       search,
       criterio,
