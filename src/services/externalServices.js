@@ -4,7 +4,6 @@
  */
 
 const RESENAS_SERVICE_URL = process.env.RESENAS_SERVICE_URL || process.env.RESENAS_URL || 'http://ms-resenas:3000';
-const PANEL_ORGANIZADOR_URL = process.env.ORGANIZADOR_SERVICE_URL || process.env.PANEL_ORGANIZADOR_URL || 'http://ms-organizador:3000';
 const REQUEST_TIMEOUT_MS = parseInt(process.env.EXTERNAL_TIMEOUT_MS, 10) || 500; // SLA acordado en contratos < 500ms
 
 /**
