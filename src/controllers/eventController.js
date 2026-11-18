@@ -652,24 +652,24 @@ const getEventServiceInfo = async (req, res) => {
   try {
     const { id } = req.params;
 
-    let data = null;
-    try {
-      const resQuery = await withTimeout(
-        supabase
-          .from('eventos')
-          .select('*')
-          .eq('id_evento', id)
-          .single()
-      );
-      if (!resQuery.error && resQuery.data) {
-        data = resQuery.data;
-      }
-    } catch (e) {
-      // ignore
-    }
+    // Buscar primero en el store local para respuesta inmediata (<2ms)
+    let data = eventStore.getById(id);
 
     if (!data) {
-      data = eventStore.getById(id);
+      try {
+        const resQuery = await withTimeout(
+          supabase
+            .from('eventos')
+            .select('*')
+            .eq('id_evento', id)
+            .single()
+        );
+        if (!resQuery.error && resQuery.data) {
+          data = resQuery.data;
+        }
+      } catch (e) {
+        // ignore
+      }
     }
 
     if (!data) {
