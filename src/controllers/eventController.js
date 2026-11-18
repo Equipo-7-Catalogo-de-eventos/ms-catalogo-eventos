@@ -813,6 +813,14 @@ const createEvent = async (req, res) => {
       data: persistedEvent || newEvent
     });
   } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: 'Error al registrar evento en Catálogo.',
+      error: error.message
+    });
+  }
+};
+
 /**
  * PATCH /api/catalogo/eventos/:id/estado
  * Permite a Panel Organizador cambiar el estado de un evento (cancelar o finalizar/cerrar)
