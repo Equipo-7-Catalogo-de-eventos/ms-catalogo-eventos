@@ -81,14 +81,16 @@ async function consultarResenasEvento(idEvento) {
 
 const GATEWAY_URL = process.env.API_GATEWAY_URL || process.env.GATEWAY_URL || 'http://ticketu-api-gateway:8080';
 const PANEL_ORGANIZADOR_URL = process.env.ORGANIZADOR_SERVICE_URL || process.env.PANEL_ORGANIZADOR_URL || `${GATEWAY_URL}/api/organizador`;
+const DIRECT_PANEL_URL = 'http://organizador-service:3000';
 
 /**
  * Consulta eventos próximos a Panel Organizador.
- * Soporta consulta vía API Gateway y directa, con parseo de array directo.
+ * Soporta consulta vía API Gateway y fallback directo en red Docker.
  * @param {number} limite
  * @returns {Promise<Array|null>}
  */
 async function consultarEventosProximosOrganizador(limite = 6) {
+  // 1. Intentar por URL configurada (ej. API Gateway)
   try {
     const url = PANEL_ORGANIZADOR_URL.includes('/api/organizador')
       ? `${PANEL_ORGANIZADOR_URL}/v1/organizador/eventos/proximos?limite=${limite}`
@@ -105,7 +107,20 @@ async function consultarEventosProximosOrganizador(limite = 6) {
       return Array.isArray(data) ? data : (data.eventos || null);
     }
   } catch (error) {
-    console.warn(`[BE2] Panel Organizador no disponible para eventos próximos (${error.message}).`);
+    // Si falla el gateway, probar fallback directo a organizador-service en la red Docker
+    try {
+      const directResponse = await fetch(`${DIRECT_PANEL_URL}/api/v1/organizador/eventos/proximos?limite=${limite}`, {
+        method: 'GET',
+        headers: { 'Accept': 'application/json' },
+        signal: AbortSignal.timeout(1000)
+      });
+      if (directResponse.ok) {
+        const data = await directResponse.json();
+        return Array.isArray(data) ? data : (data.eventos || null);
+      }
+    } catch (innerError) {
+      console.warn(`[BE2] Panel Organizador no disponible para eventos próximos (${innerError.message}).`);
+    }
   }
   return null;
 }

@@ -197,8 +197,24 @@ const getEvents = async (req, res) => {
       if (resQuery.error) {
         throw new Error(resQuery.error.message);
       }
-      data = resQuery.data;
+      data = resQuery.data || [];
       count = resQuery.count;
+
+      // Fusionar eventos de Panel que estén en memoria si la búsqueda o listado aplica
+      const idsExistentes = new Set(data.map(e => e.id_evento));
+      const eventosPanelMemoria = eventStore.events.filter(e => !idsExistentes.has(e.id_evento) && !e.id_evento.startsWith('evt-1'));
+      if (eventosPanelMemoria.length > 0) {
+        // Filtrar según término de búsqueda si existe
+        const term = (searchTerm || '').toLowerCase();
+        const filtrados = eventosPanelMemoria.filter(e => {
+          if (!term) return true;
+          return (e.nombre_evento && e.nombre_evento.toLowerCase().includes(term)) ||
+                 (e.descripcion_evento && e.descripcion_evento.toLowerCase().includes(term)) ||
+                 (e.lugar_evento && e.lugar_evento.toLowerCase().includes(term));
+        });
+        data = [...filtrados, ...data];
+        count = (count || 0) + filtrados.length;
+      }
     } catch (dbErr) {
       console.warn(`[ms-catalogo-eventos] Base de datos remota no disponible (${dbErr.message}). Utilizando catálogo local.`);
       const local = eventStore.getAll(req.query);
