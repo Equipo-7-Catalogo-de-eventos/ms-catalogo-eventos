@@ -1,4 +1,4 @@
-version: '3.8'
+﻿version: '3.8'
 
 services:
   ms-catalogo-eventos:
@@ -8,7 +8,6 @@ services:
     ports:
       # Mapeo dual: 4000 en tu Mac local y 3000 dentro del contenedor / red Gateway
       - "4000:3000"
-      - "3000:3000"
     env_file:
       - .env
     environment:
@@ -23,4 +22,3 @@ services:
 networks:
   plataforma-eventos-net:
     external: true
-
