@@ -13,6 +13,7 @@
 | I1 | Consumido | Panel Organizador | `GET /api/v1/organizador/eventos/proximos` | [Contrato Panel Organizador][panel] | [#10][issue10] |
 | I2 | Proporcionado | Entradas/Inventario | `PUT /api/v1/catalogo/eventos/{id_evento}/stock` | [Contrato Entradas][entradas] | [#12][issue12] |
 | I3 | Consumido | Reseñas | `POST /api/v1/resenas/calificaciones-basicas` y `GET /api/v1/resenas/evento/{id_evento}` | [Contrato Reseñas][resenas] | [#11][issue11] |
+| I4 | Proporcionado | Reseñas | `GET /api/catalogo/eventos/{id}/info-servicio` | [Swagger][swagger] | [#13][issue13] |
 
 ## 2. Detalle de las integraciones
 
@@ -85,13 +86,36 @@
 - [ ] Comprobar la visualización de las calificaciones y opiniones.
 - [ ] Verificar el manejo de errores y tiempos de espera.
 
-**Estado:** Implementación existente, pendiente de verificación en workstation.
+**Estado:** Implementación existente, pendiente de verificación en workstation
+
+
+### I4 - Provisión de información del evento para Reseñas
+
+- **Proveedor:** Catálogo de Eventos.
+- **Consumidor:** Reseñas.
+- **Protocolo acordado:** HTTP REST síncrono.
+- **Método:** GET.
+- **Endpoint:** `GET /api/catalogo/eventos/{id}/info-servicio`.
+- **Parámetro de ruta:** `id`.
+- **Propósito:** Proporcionar la información necesaria para que Reseñas identifique el evento y asocie correctamente sus opiniones.
+- **Datos de salida:** Identificador y nombre del evento.
+- **Especificación:** [Swagger][swagger].
+- **Código:** `src/routes/eventRoutes.js` y `src/controllers/eventController.js`.
+
+#### Verificación en workstation
+
+- [ ] Comprobar la consulta desde Reseñas mediante el API Gateway.
+- [ ] Verificar que el identificador corresponda al evento solicitado.
+- [ ] Verificar la respuesta HTTP 404 para eventos inexistentes.
+- [ ] Comprobar la consistencia entre Swagger y la implementación.
+
+**Estado:** Endpoint implementado y dependencia confirmada. Pendiente de confirmar el contrato y verificar el consumo en workstation.
+
 
 ## 3. Servicios adicionales pendientes de confirmación
 
 | Módulo contraparte | Servicio | Referencia | Estado |
 | --- | --- | --- | --- |
-| Reseñas | Consulta de identificador y nombre del evento | [Issue #13][issue13] | Endpoint implementado; consumo y contrato pendientes de confirmar |
 | Promociones | Consulta del precio del evento | [Issue #14][issue14] | Endpoint implementado; consumo y contrato pendientes de confirmar |
 | Panel Organizador | Registro de eventos | `POST /api/catalogo/eventos` | Consumo y contrato pendientes de confirmar |
 | Panel Organizador | Actualización del estado de eventos | `PATCH /api/catalogo/eventos/{id}/estado` | Consumo y contrato pendientes de confirmar |
@@ -113,6 +137,7 @@ El responsable de integración coordina los acuerdos entre módulos, verifica la
 [panel]: https://github.com/Equipo-7-Catalogo-de-eventos/Catalogo_de_eventos/blob/main/docs/CONTRATO_CATALOGO_PANEL.md
 [entradas]: https://github.com/Equipo-7-Catalogo-de-eventos/Catalogo_de_eventos/blob/main/docs/CONTRATO_ENTRADAS_CATALOGO.md
 [resenas]: https://github.com/Equipo-7-Catalogo-de-eventos/Catalogo_de_eventos/blob/main/docs/CONTRATO_CATALOGO_RESENAS.md
+[swagger]: https://github.com/Equipo-7-Catalogo-de-eventos/ms-catalogo-eventos/blob/main/docs/swagger.json
 [issue10]: https://github.com/Equipo-7-Catalogo-de-eventos/Catalogo_de_eventos/issues/10
 [issue11]: https://github.com/Equipo-7-Catalogo-de-eventos/Catalogo_de_eventos/issues/11
 [issue12]: https://github.com/Equipo-7-Catalogo-de-eventos/Catalogo_de_eventos/issues/12
