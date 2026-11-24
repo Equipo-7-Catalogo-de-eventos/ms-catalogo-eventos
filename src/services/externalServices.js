@@ -3,7 +3,7 @@
  * Implementa SLAs, timeouts y resiliencia (Graceful Degradation / Fallback).
  */
 
-const RESENAS_SERVICE_URL = process.env.RESENAS_SERVICE_URL || process.env.RESENAS_URL || 'http://ms-resenas:3000';
+const RESENAS_SERVICE_URL = process.env.RESENAS_SERVICE_URL || process.env.RESENAS_URL || 'http://resenas-service:3000';
 const REQUEST_TIMEOUT_MS = parseInt(process.env.EXTERNAL_TIMEOUT_MS, 10) || 500; // SLA acordado en contratos < 500ms
 
 /**
@@ -90,38 +90,33 @@ const DIRECT_PANEL_URL = 'http://organizador-service:3000';
  * @returns {Promise<Array|null>}
  */
 async function consultarEventosProximosOrganizador(limite = 6) {
-  // 1. Intentar por URL configurada (ej. API Gateway)
-  try {
-    const url = PANEL_ORGANIZADOR_URL.includes('/api/organizador')
-      ? `${PANEL_ORGANIZADOR_URL}/v1/organizador/eventos/proximos?limite=${limite}`
-      : `${PANEL_ORGANIZADOR_URL}/api/v1/organizador/eventos/proximos?limite=${limite}`;
+  const normalizedPanelUrl = PANEL_ORGANIZADOR_URL.replace(/\/+$/, '');
+  const primaryUrl = normalizedPanelUrl.includes('/api/organizador')
+    ? `${normalizedPanelUrl}/v1/organizador/eventos/proximos?limite=${limite}`
+    : `${normalizedPanelUrl}/api/v1/organizador/eventos/proximos?limite=${limite}`;
 
-    const response = await fetch(url, {
-      method: 'GET',
-      headers: { 'Accept': 'application/json' },
-      signal: AbortSignal.timeout(1000)
-    });
+  const fallbackUrl = `${DIRECT_PANEL_URL}/api/v1/organizador/eventos/proximos?limite=${limite}`;
+  const urls = primaryUrl === fallbackUrl ? [primaryUrl] : [primaryUrl, fallbackUrl];
 
-    if (response.ok) {
-      const data = await response.json();
-      return Array.isArray(data) ? data : (data.eventos || null);
-    }
-  } catch (error) {
-    // Si falla el gateway, probar fallback directo a organizador-service en la red Docker
+  for (const url of urls) {
     try {
-      const directResponse = await fetch(`${DIRECT_PANEL_URL}/api/v1/organizador/eventos/proximos?limite=${limite}`, {
+      const response = await fetch(url, {
         method: 'GET',
         headers: { 'Accept': 'application/json' },
-        signal: AbortSignal.timeout(1000)
+        signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS)
       });
-      if (directResponse.ok) {
-        const data = await directResponse.json();
+
+      if (response.ok) {
+        const data = await response.json();
         return Array.isArray(data) ? data : (data.eventos || null);
       }
-    } catch (innerError) {
-      console.warn(`[BE2] Panel Organizador no disponible para eventos próximos (${innerError.message}).`);
+    } catch (error) {
+      if (url === urls[urls.length - 1]) {
+        console.warn(`[BE2] Panel Organizador no disponible para eventos próximos (${error.message}).`);
+      }
     }
   }
+
   return null;
 }
 

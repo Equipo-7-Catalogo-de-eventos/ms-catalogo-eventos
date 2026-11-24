@@ -1,18 +1,23 @@
-﻿version: '3.8'
-
-services:
+﻿services:
   ms-catalogo-eventos:
     build: .
     container_name: ms-catalogo-eventos
     restart: unless-stopped
     ports:
-      # Mapeo dual: 4000 en tu Mac local y 3000 dentro del contenedor / red Gateway
+      # Mapeo dual: 4000 en host local y 3000 dentro del contenedor / red Gateway
       - "4000:3000"
     env_file:
-      - .env
+      - path: .env
+        required: false
     environment:
       - PORT=3000
       - NODE_ENV=production
+      - SUPABASE_URL=${SUPABASE_URL:-https://dcujewthkanzjlvrhedd.supabase.co}
+      - SUPABASE_KEY=${SUPABASE_KEY:-sb_publishable_SpGlcEWkJolywphsoEL5EA_JBCu6w6t}
+      - RESENAS_SERVICE_URL=${RESENAS_SERVICE_URL:-http://resenas-service:3000}
+      - ORGANIZADOR_SERVICE_URL=${ORGANIZADOR_SERVICE_URL:-http://organizador-service:3000}
+      - ENTRADAS_SERVICE_URL=${ENTRADAS_SERVICE_URL:-http://entradas-service:3000}
+      - EXTERNAL_TIMEOUT_MS=${EXTERNAL_TIMEOUT_MS:-500}
     networks:
       plataforma-eventos-net:
         aliases:

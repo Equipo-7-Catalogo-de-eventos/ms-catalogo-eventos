@@ -9,7 +9,16 @@ const app = express();
 // Puerto configurable por variable de entorno; por defecto 3000 conforme al API Gateway central
 const PORT = process.env.PORT || 3000;
 
-app.use(cors());
+// El API Gateway centraliza CORS con credentials: true; si la petición llega proxeada
+// desde el Gateway (x-forwarded-host / x-forwarded-for), no sobrescribimos ACAO con '*'.
+// En acceso directo (ej. Swagger o pruebas locales a :4000) reflejamos el origen con credentials.
+const directCors = cors({ origin: true, credentials: true });
+app.use((req, res, next) => {
+  if (req.headers['x-forwarded-host'] || req.headers['x-forwarded-for']) {
+    return next();
+  }
+  return directCors(req, res, next);
+});
 app.use(express.json());
 
 // Documentación OpenAPI 3.0 corregida con nombres reales de BD en español y formatos de respuesta (Rúbrica punto 4)

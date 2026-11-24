@@ -12,11 +12,11 @@
 | Parámetro | Valor Oficial de Integración |
 |---|---|
 | **Nombre del Contenedor** | `ms-catalogo-eventos` |
-| **Puerto Interno / Externo** | `4000` |
+| **Puerto Interno / Externo** | `3000` (interno Docker) / `4000` (host local) |
 | **Red Compartida Docker** | `plataforma-eventos-net` (externa) |
 | **Prefijo Oficial de Rutas** | `/api/catalogo/eventos` (alias `/api/catalogo`) |
 | **Documentación OpenAPI 3.0** | `/api-docs` (Swagger UI interactivo) |
-| **Variable en Gateway** | `CATALOGO_SERVICE_URL=http://ms-catalogo-eventos:4000` |
+| **Variable en Gateway** | `CATALOGO_SERVICE_URL=http://catalogo-service:3000` |
 
 ---
 
@@ -64,12 +64,13 @@ networks:
 ### ✅ Paso 4: Registrar destino (`*_SERVICE_URL`)
 * **Variable que expone Catálogo para el Gateway:**
   ```env
-  CATALOGO_SERVICE_URL=http://ms-catalogo-eventos:4000
+  CATALOGO_SERVICE_URL=http://catalogo-service:3000
   ```
 * **Variables que consume Catálogo desde la red Docker:**
   ```env
-  RESENAS_SERVICE_URL=http://ms-resenas:3000
-  ORGANIZADOR_SERVICE_URL=http://ms-organizador:3000
+  RESENAS_SERVICE_URL=http://resenas-service:3000
+  ORGANIZADOR_SERVICE_URL=http://organizador-service:3000
+  ENTRADAS_SERVICE_URL=http://entradas-service:3000
   EXTERNAL_TIMEOUT_MS=500
   ```
 

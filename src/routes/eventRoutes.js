@@ -6,6 +6,7 @@ const {
   getEventReviews,
   updateStock,
   getEventServiceInfo,
+  getEventPrice,
   createEvent,
   updateEventStatus
 } = require('../controllers/eventController');
@@ -17,6 +18,9 @@ router.route('/')
 
 // 2. Información ligera para integración de otros microservicios (BE3)
 router.get('/:id/info-servicio', getEventServiceInfo);
+
+// 2b. Consulta de precio para microservicio de Promociones
+router.get('/:id/precio', getEventPrice);
 
 // 3. Consulta de opiniones y estrellas para el módulo de detalle de Amalia
 router.get('/:id/resenas', getEventReviews);

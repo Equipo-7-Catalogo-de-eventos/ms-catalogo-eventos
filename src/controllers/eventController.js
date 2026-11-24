@@ -16,7 +16,7 @@ function mapearEventoPanel(evPanel) {
   const hora = evPanel.hora_evento || evPanel.hora || '20:00';
   const img = evPanel.imagen || evPanel.imagen_evento || 'https://picsum.photos/seed/' + id + '/800/400';
   const precio = Number(evPanel.precio ?? evPanel.precio_final_evento ?? 0);
-  
+
   let tipo = 'pagado';
   const rawTipo = String(evPanel.tipo_entrada || evPanel.tipo_evento || '').toUpperCase();
   if (rawTipo.includes('GRAT') || precio === 0) {
@@ -47,20 +47,44 @@ function mapearEventoPanel(evPanel) {
   };
 }
 
-// Sincronización proactiva con Panel Organizador al recibir consultas si la BD tiene pocos eventos
-let sincronizacionEjecutada = false;
+// Sincronización proactiva con Panel Organizador con cooldown para reintentar si Panel levanta después
+let ultimaSincronizacionExitosa = 0;
+let ultimoIntentoSincronizacion = 0;
+const SYNC_SUCCESS_TTL_MS = 5 * 60 * 1000;
+const SYNC_RETRY_COOLDOWN_MS = 60 * 1000;
+
+function upsertLocalEvent(mapeado) {
+  const idx = eventStore.events.findIndex(e => (e.id_evento || e.evento_id) === mapeado.id_evento);
+  if (idx >= 0) {
+    eventStore.events[idx] = { ...eventStore.events[idx], ...mapeado };
+  } else {
+    eventStore.events.unshift(mapeado);
+  }
+}
+
 async function sincronizarConPanelSiEsNecesario() {
-  if (sincronizacionEjecutada) return;
-  sincronizacionEjecutada = true;
+  const now = Date.now();
+  if (ultimaSincronizacionExitosa > 0 && (now - ultimaSincronizacionExitosa) < SYNC_SUCCESS_TTL_MS) {
+    return;
+  }
+  if (ultimoIntentoSincronizacion > 0 && (now - ultimoIntentoSincronizacion) < SYNC_RETRY_COOLDOWN_MS) {
+    return;
+  }
+  ultimoIntentoSincronizacion = now;
+
   try {
     const eventosPanel = await consultarEventosProximosOrganizador(10);
-    if (Array.isArray(eventosPanel) && eventosPanel.length > 0) {
+    if (Array.isArray(eventosPanel)) {
+      ultimaSincronizacionExitosa = Date.now();
       for (const ev of eventosPanel) {
         const mapeado = mapearEventoPanel(ev);
         if (mapeado.id_evento) {
-          eventStore.events.unshift(mapeado);
+          upsertLocalEvent(mapeado);
           try {
-            await supabase.from('eventos').upsert(mapeado, { onConflict: 'id_evento' });
+            await withTimeout(
+              supabase.from('eventos').upsert(mapeado, { onConflict: 'id_evento' }),
+              2000
+            );
           } catch (e) {
             // ignore
           }
@@ -154,12 +178,26 @@ const getEvents = async (req, res) => {
       query = query.lt('fecha_evento', nowIso);
     }
 
-    // 5. Filtro por rango de fechas específico
+    // 5. Filtro por rango de fechas específico (validación estricta para responder 400 en fechas inválidas)
     if (fecha_desde) {
-      query = query.gte('fecha_evento', new Date(fecha_desde).toISOString());
+      const parsedDesde = new Date(fecha_desde);
+      if (Number.isNaN(parsedDesde.getTime())) {
+        return res.status(400).json({
+          success: false,
+          message: "Parámetro 'fecha_desde' inválido. Debe ser una fecha ISO 8601 válida (ej. 2026-10-01)."
+        });
+      }
+      query = query.gte('fecha_evento', parsedDesde.toISOString());
     }
     if (fecha_hasta) {
-      query = query.lte('fecha_evento', new Date(fecha_hasta).toISOString());
+      const parsedHasta = new Date(fecha_hasta);
+      if (Number.isNaN(parsedHasta.getTime())) {
+        return res.status(400).json({
+          success: false,
+          message: "Parámetro 'fecha_hasta' inválido. Debe ser una fecha ISO 8601 válida (ej. 2026-12-31)."
+        });
+      }
+      query = query.lte('fecha_evento', parsedHasta.toISOString());
     }
 
     // 6. Ordenamiento dinámico
@@ -209,8 +247,8 @@ const getEvents = async (req, res) => {
         const filtrados = eventosPanelMemoria.filter(e => {
           if (!term) return true;
           return (e.nombre_evento && e.nombre_evento.toLowerCase().includes(term)) ||
-                 (e.descripcion_evento && e.descripcion_evento.toLowerCase().includes(term)) ||
-                 (e.lugar_evento && e.lugar_evento.toLowerCase().includes(term));
+            (e.descripcion_evento && e.descripcion_evento.toLowerCase().includes(term)) ||
+            (e.lugar_evento && e.lugar_evento.toLowerCase().includes(term));
         });
         data = [...filtrados, ...data];
         count = (count || 0) + filtrados.length;
@@ -565,19 +603,23 @@ const updateStock = async (req, res) => {
 
     // Verificar si el evento existe en Catálogo
     let existingEvent = null;
+    let dbUnavailable = false;
     try {
       const resFind = await withTimeout(
         supabase
           .from('eventos')
           .select('id_evento, estado_evento, stock_actual')
           .eq('id_evento', id)
-          .single()
+          .single(),
+        2500
       );
       if (!resFind.error && resFind.data) {
         existingEvent = resFind.data;
+      } else if (resFind.error && resFind.error.code !== 'PGRST116' && !(resFind.error.message && resFind.error.message.includes('JSON object requested'))) {
+        dbUnavailable = true;
       }
     } catch (e) {
-      // ignore
+      dbUnavailable = true;
     }
 
     if (!existingEvent) {
@@ -585,6 +627,12 @@ const updateStock = async (req, res) => {
     }
 
     if (!existingEvent) {
+      if (dbUnavailable) {
+        return res.status(503).json({
+          success: false,
+          message: 'Base de datos de Catálogo temporalmente no disponible al validar el evento.'
+        });
+      }
       return res.status(404).json({
         success: false,
         message: `Evento con ID '${id}' no existe en la base de datos de Catálogo.`
@@ -609,7 +657,8 @@ const updateStock = async (req, res) => {
           })
           .eq('id_evento', id)
           .select()
-          .single()
+          .single(),
+        2500
       );
       if (!resUpdate.error && resUpdate.data) {
         updatedEvent = resUpdate.data;
@@ -622,6 +671,13 @@ const updateStock = async (req, res) => {
     const localUpdated = eventStore.updateStock(id, nuevo_stock);
     if (!updatedEvent) {
       updatedEvent = localUpdated;
+    }
+
+    if (!updatedEvent) {
+      return res.status(503).json({
+        success: false,
+        message: 'No fue posible persistir la actualización de stock en la base de datos de Catálogo.'
+      });
     }
 
     return res.status(200).json({
@@ -647,29 +703,32 @@ const updateStock = async (req, res) => {
 
 /**
  * GET /api/catalogo/eventos/:id/info-servicio (BE3)
+ * Consulta Supabase primero para garantizar datos actualizados y consistentes,
+ * con fallback automático al catálogo local si Supabase no responde.
  */
 const getEventServiceInfo = async (req, res) => {
   try {
     const { id } = req.params;
 
-    // Buscar primero en el store local para respuesta inmediata (<2ms)
-    let data = eventStore.getById(id);
+    let data = null;
+    try {
+      const resQuery = await withTimeout(
+        supabase
+          .from('eventos')
+          .select('*')
+          .eq('id_evento', id)
+          .single(),
+        2000
+      );
+      if (!resQuery.error && resQuery.data) {
+        data = resQuery.data;
+      }
+    } catch (e) {
+      // Fallback al store local si Supabase no está disponible
+    }
 
     if (!data) {
-      try {
-        const resQuery = await withTimeout(
-          supabase
-            .from('eventos')
-            .select('*')
-            .eq('id_evento', id)
-            .single()
-        );
-        if (!resQuery.error && resQuery.data) {
-          data = resQuery.data;
-        }
-      } catch (e) {
-        // ignore
-      }
+      data = eventStore.getById(id);
     }
 
     if (!data) {
@@ -702,6 +761,63 @@ const getEventServiceInfo = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: 'Error interno al consultar información de servicio.',
+      error: error.message
+    });
+  }
+};
+
+/**
+ * GET /api/catalogo/eventos/:id/precio
+ * Endpoint compatible con el cliente de Promociones (catalogoClient.js).
+ */
+const getEventPrice = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    let data = null;
+    try {
+      const resQuery = await withTimeout(
+        supabase
+          .from('eventos')
+          .select('id_evento, precio_final_evento, tipo_evento, estado_evento')
+          .eq('id_evento', id)
+          .single(),
+        2000
+      );
+      if (!resQuery.error && resQuery.data) {
+        data = resQuery.data;
+      }
+    } catch (e) {
+      // Fallback local
+    }
+
+    if (!data) {
+      data = eventStore.getById(id);
+    }
+
+    if (!data) {
+      return res.status(404).json({
+        success: false,
+        message: `Evento '${id}' no encontrado.`
+      });
+    }
+
+    const eventId = data.id_evento || data.evento_id;
+    const precio = Number(data.precio_final_evento ?? data.evento_precio_final ?? 0);
+
+    return res.status(200).json({
+      success: true,
+      id_evento: eventId,
+      precio_base: precio,
+      precio_final: precio,
+      precio_final_evento: precio,
+      tipo_evento: data.tipo_evento || data.evento_tipo || (precio === 0 ? 'gratuito' : 'pagado'),
+      estado_evento: data.estado_evento || data.evento_estado || 'disponible'
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: 'Error interno al consultar precio del evento.',
       error: error.message
     });
   }
@@ -771,12 +887,20 @@ const createEvent = async (req, res) => {
       });
     }
 
+    const parsedDate = new Date(dateVal);
+    if (Number.isNaN(parsedDate.getTime())) {
+      return res.status(400).json({
+        success: false,
+        message: 'La fecha del evento es inválida. Debe ser una fecha ISO 8601 válida.'
+      });
+    }
+
     const newEvent = {
       id_evento: id,
       nombre_evento: title,
       descripcion_evento: desc,
       lugar_evento: place,
-      fecha_evento: new Date(dateVal).toISOString(),
+      fecha_evento: parsedDate.toISOString(),
       hora_evento: timeVal,
       imagen_evento: imgVal,
       precio_final_evento: priceVal,
@@ -795,7 +919,8 @@ const createEvent = async (req, res) => {
           .from('eventos')
           .upsert(newEvent, { onConflict: 'id_evento' })
           .select()
-          .single()
+          .single(),
+        3000
       );
       if (!resInsert.error && resInsert.data) {
         persistedEvent = resInsert.data;
@@ -804,8 +929,8 @@ const createEvent = async (req, res) => {
       console.warn('[ms-catalogo-eventos] No se pudo persistir evento en Supabase (' + dbErr.message + '). Guardando en memoria local.');
     }
 
-    // Guardar en store local para consistencia inmediata
-    eventStore.events.unshift(newEvent);
+    // Guardar en store local para consistencia inmediata sin duplicar
+    upsertLocalEvent(newEvent);
 
     return res.status(201).json({
       success: true,
@@ -883,6 +1008,7 @@ module.exports = {
   getEventReviews,
   updateStock,
   getEventServiceInfo,
+  getEventPrice,
   createEvent,
   updateEventStatus
 };
