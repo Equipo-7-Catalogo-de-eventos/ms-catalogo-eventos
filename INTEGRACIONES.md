@@ -9,12 +9,12 @@
 | I2 | Catálogo | Entradas/Inventario | `PUT /api/v1/catalogo/eventos/{id_evento}/stock` | [Entradas-Catálogo][entradas] | [#12][issue12] | Verificada en workstation |
 | I3 | Reseñas | Catálogo | `POST /api/v1/resenas/calificaciones-basicas` y `GET /api/v1/resenas/evento/{id_evento}` | [Catálogo-Reseñas][resenas] | [#11][issue11] | Verificada en workstation |
 | I4 | Catálogo | Reseñas | `GET /api/catalogo/eventos/{id}/info-servicio` | [Reseñas-Catálogo][resenas_catalogo] | [#13][issue13] | Verificada en workstation |
-| I5 | Catálogo | Promociones | `GET /api/catalogo/eventos/{id}/precio` | Pendiente de formalización | [#19][issue19] | Servicio disponible en workstation; pendiente de corrección de configuración en Promociones |
+| I5 | Catálogo | Promociones | `GET /api/catalogo/eventos/{id}/precio` | Pendiente de formalización | [#19][issue19] | Servicio disponible y verificado en workstation; Promociones no lo consume (obtiene el precio desde Entradas) |
 
 ## Observaciones de la verificación en workstation (24-11-2026)
 
 - **I2:** al reservar una entrada del evento TestRN desde Entradas, `stock_actual` pasó de 100 a 8 en el catálogo. Entradas informa el stock al reservar; Pagos no estaba operativo, por lo que no se probó una compra completa.
-- **I5:** el endpoint responde por el API Gateway y desde el contenedor de Promociones (`http://catalogo-service:3000/api/catalogo/eventos/{id}/precio`). Promociones tiene configurado `CATALOGO_SERVICE_URL=http://ticketu-catalogo:4001`, que no existe en la red; debe ser `http://catalogo-service:3000/api/catalogo`. Se informó al equipo Promociones.
+- **I5:** el endpoint `GET /api/catalogo/eventos/{id}/precio` responde por el API Gateway y desde el contenedor de Promociones (`http://catalogo-service:3000/api/catalogo/eventos/{id}/precio`). Actualmente Promociones no consume este servicio ya que obtienen el precio desde Entradas. El servicio queda disponible para uso futuro.
 - Evidencias: [docs/EVIDENCIAS_INTEGRACION.md](docs/EVIDENCIAS_INTEGRACION.md).
 
 [panel]: https://github.com/Equipo-7-Catalogo-de-eventos/Catalogo_de_eventos/blob/main/docs/CONTRATO_CATALOGO_PANEL.md
