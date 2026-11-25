@@ -1,18 +1,18 @@
 # Microservicio de Catálogo de Eventos (TicketU)
-
+ 
 Microservicio backend RESTful desarrollado en **Node.js** y **Express**, encargado del listado, búsqueda, filtrado y consulta de eventos, con persistencia en PostgreSQL mediante **Supabase**.
-
+ 
 > **Repositorio principal, documentación y contratos:**  
 > [Catalogo_de_eventos](https://github.com/Equipo-7-Catalogo-de-eventos/Catalogo_de_eventos)  
 > **Planificación, historias de usuario e ítems de integración:**  
 > [Issues de Catalogo_de_eventos](https://github.com/Equipo-7-Catalogo-de-eventos/Catalogo_de_eventos/issues)  
 > **Front End del módulo (repositorio común de la plataforma):**  
 > [FWizav/FrontendTitec](https://github.com/FWizav/FrontendTitec), carpeta `src/modules/catalogo`
-
+ 
 ---
-
+ 
 ## Características de la implementación
-
+ 
 - **Visualización de eventos (HU1):** Listado de eventos próximos, vigentes y pasados.
 - **Búsqueda multivariable (HU2):** Búsqueda por título, descripción y lugar del evento.
 - **Filtros avanzados (HU3 / BE1):**
@@ -28,14 +28,13 @@ Microservicio backend RESTful desarrollado en **Node.js** y **Express**, encarga
 - **Provisión de servicios (BE3):** Información de eventos para Reseñas, actualización de stock desde Entradas/Inventario y consulta de precios para Promociones.
 - **Dockerización:** Conexión a la red compartida `plataforma-eventos-net`.
 - **Swagger OpenAPI 3.0:** Documentación interactiva disponible en `/api-docs`.
-
 ---
-
+ 
 ## Estructura del repositorio
-
+ 
 ```text
 ms-catalogo-eventos/
-├── docs/                         # Contratos, esquemas SQL, diagramas y evidencias
+├── docs/                         # Contratos, Swagger, colección Postman y evidencias
 ├── src/
 │   ├── config/
 │   │   └── supabase.js
@@ -53,6 +52,9 @@ ms-catalogo-eventos/
 ├── Dockerfile                    # Node 22 Alpine
 ├── docker-compose.yml
 ├── .env.example
+├── schema_db.sql                 # Script de creación de la base de datos
+├── Diccionario-de-DatosBD.md
+├── Diagrama-relacionalBD.md
 ├── .gitignore
 ├── package.json
 ├── package-lock.json
@@ -60,75 +62,75 @@ ms-catalogo-eventos/
 ├── RESPONSABLES.md
 └── README.md
 ```
-
+ 
 ---
-
+ 
 ## Variables de entorno
-
+ 
 Crear el archivo `.env` a partir de `.env.example`:
-
+ 
 ```bash
 cp .env.example .env
 ```
-
+ 
 Configurar las siguientes variables según el ambiente de ejecución:
-
+ 
 ```env
 PORT=4000
-SUPABASE_URL=[https://tu-proyecto.supabase.co](https://tu-proyecto.supabase.co)
+SUPABASE_URL=https://tu-proyecto.supabase.co
 SUPABASE_KEY=tu-anon-key
-
+ 
 RESENAS_SERVICE_URL=http://resenas-service:3000
 ORGANIZADOR_SERVICE_URL=http://organizador-service:3000
 ENTRADAS_SERVICE_URL=http://entradas-service:3000
-
+ 
 EXTERNAL_TIMEOUT_MS=500
 ```
-
+ 
 Las direcciones y credenciales deben corresponder al ambiente de ejecución. En workstation, las comunicaciones entre módulos deben utilizar las rutas configuradas en el API Gateway. El archivo `.env` no debe incorporarse al repositorio.
-
+ 
 ---
-
+ 
 ## Ejecución local
-
+ 
 ### 1. Instalar dependencias
-
+ 
 ```bash
 npm install
 ```
-
+ 
 ### 2. Iniciar en modo desarrollo
-
+ 
 ```bash
 npm run dev
 ```
-
+ 
 ### 3. Iniciar en modo producción
-
+ 
 ```bash
 npm start
 ```
-
+ 
 ---
-
+ 
 ## Ejecución con Docker
-
+ 
 API Gateway central de TicketU: [FWizav/backendticketU](https://github.com/FWizav/backendticketU).
-
+ 
 ### 1. Crear la red compartida
-
+ 
 Si la red no existe:
-
+ 
 ```bash
 docker network create plataforma-eventos-net
 ```
-
+ 
 ### 2. Construir e iniciar el contenedor
-
+ 
 ```bash
 docker compose up -d --build
 ```
-
+ 
 | Parámetro | Valor |
 | --- | --- |
 | Contenedor | `ms-catalogo-eventos` |
@@ -136,13 +138,13 @@ docker compose up -d --build
 | Red Docker | `plataforma-eventos-net` |
 | Puerto interno | `3000` |
 | Puerto externo | `4000` |
-
+ 
 Para actualizar una instalación existente: `git pull` y luego `docker compose up -d --build`. Si Docker indica que el nombre `ms-catalogo-eventos` ya está en uso, ejecutar `docker rm -f ms-catalogo-eventos` y repetir el comando (el contenedor no guarda datos; los eventos están en Supabase).
-
+ 
 ---
-
+ 
 ## Instalación en workstation
-
+ 
 | Recurso | Dirección |
 | --- | --- |
 | Catálogo vía API Gateway | `http://localhost:8080/api/catalogo/eventos` |
@@ -150,48 +152,45 @@ Para actualizar una instalación existente: `git pull` y luego `docker compose u
 | Swagger | `http://localhost:4000/api-docs` |
 | Front End (módulo Catálogo) | `http://localhost:3000/catalogo` |
 | Variable en el API Gateway | `CATALOGO_SERVICE_URL=http://catalogo-service:3000` |
-
+ 
 ### Usuario de prueba
-
+ 
 Las consultas del catálogo son públicas. Para recorrer el flujo de reserva de entradas desde el detalle de un evento se usa esta cuenta de Auth:
-
+ 
 | Correo | Contraseña |
 | --- | --- |
 | `catalogo@uv.cl` | `catalogo` |
-
+ 
 ### Flujo principal para revisar el módulo
-
+ 
 1. Abrir el front y entrar a **Catálogo**: se listan los eventos publicados por Panel Organizador.
 2. Buscar por nombre, aplicar filtros y cambiar de página.
 3. Abrir un evento: detalle, precio, stock informado por Entradas y reseñas.
 4. Iniciar sesión con el usuario de prueba y reservar una entrada: Entradas actualiza el stock del catálogo, visible en `http://localhost:8080/api/catalogo/eventos/{id}` (campo `stock_actual`).
-
 ---
-
+ 
 ## Inicialización de Base de Datos (`BD1` / `BD3`)
-
-El esquema relacional, restricciones (`CHECK`), índices GIN/B-Tree y los 16 registros iniciales se encuentran en `docs/schema_db.sql` (y su documentación técnica en `docs/diccionario-de-datos.md` y `docs/diagrama-relacional.md`).
-
+ 
+El esquema relacional, restricciones (`CHECK`), índices GIN/B-Tree y los 16 registros iniciales se encuentran en `schema_db.sql` (y su documentación técnica en `Diccionario-de-DatosBD.md` y `Diagrama-relacionalBD.md`).
+ 
 ### Opción A: Mediante Supabase (Ambiente Cloud / Workstation)
 1. Ingresar al **SQL Editor** del proyecto en Supabase configurado en `SUPABASE_URL`.
-2. Copiar y ejecutar el contenido íntegro de `docs/schema_db.sql`.
-3. Verificar en el **Table Editor** que la tabla `eventos` se haya creado con sus 16 registros iniciales y sus URLs de imagen actualizadas.
-
+2. Copiar y ejecutar el contenido íntegro de `schema_db.sql`.
+3. Verificar en el **Table Editor** que la tabla `eventos` se haya creado. Los 16 registros iniciales son datos de ejemplo para desarrollo local: en workstation la tabla ya existe y contiene solo los eventos publicados por Panel Organizador, por lo que no se debe volver a ejecutar el `INSERT`.
 ### Opción B: Mediante PostgreSQL local o contenedor (`psql`)
 Si se despliega sobre una instancia PostgreSQL estándar en workstation:
 ```bash
-psql -h <HOST_DB> -U <USUARIO_DB> -d <NOMBRE_DB> -f docs/schema_db.sql
+psql -h <HOST_DB> -U <USUARIO_DB> -d <NOMBRE_DB> -f schema_db.sql
 ```
-
+ 
 ### Flujo Principal de Verificación
 1. Consultar `GET /api/catalogo/eventos` (a través del API Gateway o desde el Front End del catálogo) para visualizar la cartelera general (acceso público o autenticado con usuario de prueba de Auth con `rol: cliente` u `organizador`).
-2. Filtrar eventos por categoría (ej. `GET /api/catalogo/eventos?categoria=academico`) o realizar búsqueda por palabras clave (ej. `GET /api/catalogo/eventos?busqueda=TITEC`).
-3. Ingresar al detalle de un evento específico (`GET /api/catalogo/eventos/evt-101`) y verificar disponibilidad de stock, precio final y calificación promedio consolidada.
-
+2. Filtrar eventos por categoría (ej. `GET /api/catalogo/eventos?categoria=academico`) o realizar búsqueda por palabras clave (ej. `GET /api/catalogo/eventos?search=TITEC`).
+3. Ingresar al detalle de un evento específico (ej. `GET /api/catalogo/eventos/6b05ebb001bbdc138427b5da`) y verificar disponibilidad de stock, precio final y calificación promedio consolidada.
 ---
-
+ 
 ## Endpoints principales
-
+ 
 | Método | Endpoint | Descripción |
 | --- | --- | --- |
 | GET | `/health` | Estado del servicio |
@@ -205,15 +204,16 @@ psql -h <HOST_DB> -U <USUARIO_DB> -d <NOMBRE_DB> -f docs/schema_db.sql
 | PATCH | `/api/catalogo/eventos/:id/estado` | Actualización del estado del evento |
 | PUT | `/api/catalogo/eventos/:id/stock` | Actualización de stock desde Entradas/Inventario |
 | PATCH | `/api/catalogo/eventos/:id/stock` | Ruta alternativa de actualización de stock |
-
+ 
 ---
-
+ 
 ## Documentación
-
+ 
 - [Contratos de integración](https://github.com/Equipo-7-Catalogo-de-eventos/Catalogo_de_eventos/tree/main/docs)
-- [Diccionario de Datos](docs/diccionario-de-datos.md)
-- [Diagrama Relacional](docs/diagrama-relacional.md)
-- [Script SQL de Creación](docs/schema_db.sql)
+- [Diccionario de Datos](Diccionario-de-DatosBD.md)
+- [Diagrama Relacional](Diagrama-relacionalBD.md)
+- [Script SQL de Creación](schema_db.sql)
 - [Integraciones](INTEGRACIONES.md)
 - [Responsables](RESPONSABLES.md)
 - [Evidencias de integración](docs/EVIDENCIAS_INTEGRACION.md)
+ 
