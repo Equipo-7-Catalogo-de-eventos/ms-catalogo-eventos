@@ -1,0 +1,738 @@
+{
+  "info": {
+    "_postman_id": "df35843b-4a5b-43ae-94e5-3abe28f0c6e8",
+    "name": "Catálogo de Eventos - Pruebas de integración (Evaluación 4)",
+    "description": "Casos de prueba de las integraciones del Catálogo de Eventos (Equipo 7), con un caso exitoso y al menos un caso de error por integración. Se ejecutan contra el API Gateway (baseUrl = http://localhost:8080). Ejecutar la colección completa en orden con Run collection: el caso I1.2 guarda el evento que usan los casos siguientes.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "0. Infraestructura",
+      "description": "Verifica que el API Gateway esté disponible antes de probar las integraciones.",
+      "item": [
+        {
+          "name": "0.1 API Gateway disponible",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/health",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "health"
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "I1 - Panel Organizador hacia Catálogo",
+      "description": "Servicio consumido por Catálogo: GET /api/v1/organizador/eventos/proximos (Panel Organizador). Contrato: CONTRATO_CATALOGO_PANEL.md. Issue #10.",
+      "item": [
+        {
+          "name": "I1.1 Panel entrega los eventos publicados (contraparte)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test(\"Entrega una lista de eventos\", () => pm.expect(json).to.be.an(\"array\"));",
+                  "pm.test(\"Cada evento trae id_evento y nombre_evento\", () => {",
+                  "  json.forEach(e => { pm.expect(e).to.have.property(\"id_evento\"); pm.expect(e).to.have.property(\"nombre_evento\"); });",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/organizador/v1/organizador/eventos/proximos?limite=6",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "organizador",
+                "v1",
+                "organizador",
+                "eventos",
+                "proximos"
+              ],
+              "query": [
+                {
+                  "key": "limite",
+                  "value": "6"
+                }
+              ]
+            },
+            "description": "Consulta directa a Panel Organizador por el API Gateway, con la misma ruta que consume Catálogo."
+          }
+        },
+        {
+          "name": "I1.2 Catálogo lista los eventos recibidos desde Panel (éxito)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test(\"success es true\", () => pm.expect(json.success).to.eql(true));",
+                  "pm.test(\"Entrega al menos un evento\", () => pm.expect(json.data).to.be.an(\"array\").that.is.not.empty);",
+                  "pm.test(\"Cada evento trae los campos del contrato\", () => {",
+                  "  json.data.forEach(e => {",
+                  "    pm.expect(e).to.include.keys(\"id_evento\", \"nombre_evento\", \"fecha_evento\", \"precio_final_evento\", \"stock_actual\", \"es_pasado\");",
+                  "  });",
+                  "});",
+                  "pm.test(\"La cantidad de eventos no supera el límite\", () => pm.expect(json.count).to.be.at.most(json.pagination.limite));",
+                  "// Guarda un evento real para los casos siguientes",
+                  "const e = json.data[0];",
+                  "pm.collectionVariables.set(\"evento_id\", e.id_evento);",
+                  "pm.collectionVariables.set(\"evento_precio\", e.precio_final_evento);",
+                  "pm.collectionVariables.set(\"evento_nombre\", e.nombre_evento);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/catalogo/eventos?limite=50",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "catalogo",
+                "eventos"
+              ],
+              "query": [
+                {
+                  "key": "limite",
+                  "value": "50"
+                }
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "I1.3 Panel responde 404 ante un evento inexistente (error)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 404\", () => pm.expect(pm.response.code).to.eql(404));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/organizador/v1/organizador/eventos/{{panel_id_inexistente}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "organizador",
+                "v1",
+                "organizador",
+                "eventos",
+                "{{panel_id_inexistente}}"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "I1.4 Catálogo rechaza una fecha inválida con 400 (error)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"success es false\", () => pm.expect(pm.response.json().success).to.eql(false));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/catalogo/eventos?fecha_desde=no-es-fecha",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "catalogo",
+                "eventos"
+              ],
+              "query": [
+                {
+                  "key": "fecha_desde",
+                  "value": "no-es-fecha"
+                }
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "I2 - Entradas/Inventario hacia Catálogo (stock)",
+      "description": "Servicio proporcionado por Catálogo: PUT /api/catalogo/eventos/{id}/stock, invocado por Entradas. Contrato: CONTRATO_ENTRADAS_CATALOGO.md. Issue #12. El caso exitoso reenvía el stock actual del evento para no alterar los datos.",
+      "item": [
+        {
+          "name": "I2.1 Obtener el stock actual del evento",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "const d = pm.response.json().data;",
+                  "pm.test(\"El detalle trae stock_actual\", () => pm.expect(d.stock_actual).to.be.a(\"number\"));",
+                  "pm.collectionVariables.set(\"stock_actual\", d.stock_actual);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/catalogo/eventos/{{evento_id}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "catalogo",
+                "eventos",
+                "{{evento_id}}"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "I2.2 Actualizar stock con un valor válido (éxito)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test(\"success es true\", () => pm.expect(json.success).to.eql(true));",
+                  "pm.test(\"El stock guardado es el enviado\", () => pm.expect(json.data.stock_actual).to.eql(Number(pm.collectionVariables.get(\"stock_actual\"))));",
+                  "pm.test(\"El estado es coherente con el stock\", () => {",
+                  "  if (json.data.stock_actual === 0) pm.expect(json.data.estado_evento).to.eql(\"agotado\");",
+                  "  else pm.expect(json.data.estado_evento).to.not.eql(\"agotado\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/catalogo/eventos/{{evento_id}}/stock",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "catalogo",
+                "eventos",
+                "{{evento_id}}",
+                "stock"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nuevo_stock\": {{stock_actual}},\n  \"token_sesion\": \"token-prueba-postman\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "I2.3 Actualizar stock sin token de sesión (error 401)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 401\", () => pm.response.to.have.status(401));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/catalogo/eventos/{{evento_id}}/stock",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "catalogo",
+                "eventos",
+                "{{evento_id}}",
+                "stock"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nuevo_stock\": 5\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "I2.4 Actualizar stock con valor negativo (error 400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/catalogo/eventos/{{evento_id}}/stock",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "catalogo",
+                "eventos",
+                "{{evento_id}}",
+                "stock"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nuevo_stock\": -1,\n  \"token_sesion\": \"token-prueba-postman\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "I2.5 Actualizar stock de un evento inexistente (error 404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 404\", () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/catalogo/eventos/{{evento_inexistente}}/stock",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "catalogo",
+                "eventos",
+                "{{evento_inexistente}}",
+                "stock"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nuevo_stock\": 5,\n  \"token_sesion\": \"token-prueba-postman\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "I3 - Reseñas hacia Catálogo",
+      "description": "Servicio consumido por Catálogo: POST /api/v1/resenas/calificaciones-basicas y GET /api/v1/resenas/evento/{id}. Contrato: CONTRATO_CATALOGO_RESENAS.md. Issue #11.",
+      "item": [
+        {
+          "name": "I3.1 Reseñas responde las reseñas de un evento (contraparte)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"La respuesta es JSON\", () => pm.response.to.be.json);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/resenas/evento/{{evento_id}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "resenas",
+                "evento",
+                "{{evento_id}}"
+              ]
+            },
+            "description": "Consulta directa al módulo Reseñas por el API Gateway."
+          }
+        },
+        {
+          "name": "I3.2 Catálogo entrega calificación y reseñas del evento (éxito)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test(\"success es true\", () => pm.expect(json.success).to.eql(true));",
+                  "pm.test(\"Trae total_resenas numérico\", () => pm.expect(json.data.total_resenas).to.be.a(\"number\"));",
+                  "pm.test(\"Trae la lista de reseñas\", () => pm.expect(json.data.resenas).to.be.an(\"array\"));",
+                  "pm.test(\"Corresponde al evento consultado\", () => pm.expect(json.data.id_evento).to.eql(pm.collectionVariables.get(\"evento_id\")));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/catalogo/eventos/{{evento_id}}/resenas",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "catalogo",
+                "eventos",
+                "{{evento_id}}",
+                "resenas"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "I3.3 Reseñas de un evento inexistente (error 404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 404\", () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/catalogo/eventos/{{evento_inexistente}}/resenas",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "catalogo",
+                "eventos",
+                "{{evento_inexistente}}",
+                "resenas"
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "I4 - Catálogo hacia Reseñas (info-servicio)",
+      "description": "Servicio proporcionado por Catálogo: GET /api/catalogo/eventos/{id}/info-servicio, consumido por Reseñas. Contrato: CONTRATO_RESENAS_CATALOGO.md. Issue #13.",
+      "item": [
+        {
+          "name": "I4.1 Información del evento para Reseñas (éxito)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "const d = pm.response.json().data;",
+                  "pm.test(\"Corresponde al evento consultado\", () => pm.expect(d.id_evento).to.eql(pm.collectionVariables.get(\"evento_id\")));",
+                  "pm.test(\"Trae el nombre del evento\", () => pm.expect(d.nombre_evento).to.eql(pm.collectionVariables.get(\"evento_nombre\")));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/catalogo/eventos/{{evento_id}}/info-servicio",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "catalogo",
+                "eventos",
+                "{{evento_id}}",
+                "info-servicio"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "I4.2 Información de un evento inexistente (error 404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 404\", () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/catalogo/eventos/{{evento_inexistente}}/info-servicio",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "catalogo",
+                "eventos",
+                "{{evento_inexistente}}",
+                "info-servicio"
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "I5 - Catálogo hacia Promociones (precio)",
+      "description": "Servicio proporcionado por Catálogo: GET /api/catalogo/eventos/{id}/precio, consumido por Promociones. Issue #19.",
+      "item": [
+        {
+          "name": "I5.1 Precio del evento para Promociones (éxito)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test(\"success es true\", () => pm.expect(json.success).to.eql(true));",
+                  "pm.test(\"Corresponde al evento consultado\", () => pm.expect(json.id_evento).to.eql(pm.collectionVariables.get(\"evento_id\")));",
+                  "pm.test(\"precio_base es numérico\", () => pm.expect(json.precio_base).to.be.a(\"number\"));",
+                  "pm.test(\"precio_base coincide con el precio del catálogo\", () => pm.expect(json.precio_base).to.eql(Number(pm.collectionVariables.get(\"evento_precio\"))));",
+                  "pm.test(\"tipo_evento es gratuito o pagado\", () => pm.expect([\"gratuito\", \"pagado\"]).to.include(json.tipo_evento));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/catalogo/eventos/{{evento_id}}/precio",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "catalogo",
+                "eventos",
+                "{{evento_id}}",
+                "precio"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "I5.2 Precio de un evento inexistente (error 404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 404\", () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/catalogo/eventos/{{evento_inexistente}}/precio",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "catalogo",
+                "eventos",
+                "{{evento_inexistente}}",
+                "precio"
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080",
+      "type": "string"
+    },
+    {
+      "key": "evento_id",
+      "value": "6b05ebb001bbdc138427b5da",
+      "type": "string"
+    },
+    {
+      "key": "evento_precio",
+      "value": "10000",
+      "type": "string"
+    },
+    {
+      "key": "evento_nombre",
+      "value": "TestPromociones",
+      "type": "string"
+    },
+    {
+      "key": "stock_actual",
+      "value": "0",
+      "type": "string"
+    },
+    {
+      "key": "evento_inexistente",
+      "value": "evento-que-no-existe-123",
+      "type": "string"
+    },
+    {
+      "key": "panel_id_inexistente",
+      "value": "000000000000000000000000",
+      "type": "string"
+    }
+  ]
+}
