@@ -8,7 +8,8 @@
 | I1 | Panel Organizador | Catálogo | `GET /api/v1/organizador/eventos/proximos` | [Catálogo-Panel][panel] | [#10][issue10] | Pendiente de verificación en workstation |
 | I2 | Catálogo | Entradas/Inventario | `PUT /api/v1/catalogo/eventos/{id_evento}/stock` | [Entradas-Catálogo][entradas] | [#12][issue12] | Pendiente de verificación en workstation |
 | I3 | Reseñas | Catálogo | `POST /api/v1/resenas/calificaciones-basicas` y `GET /api/v1/resenas/evento/{id_evento}` | [Catálogo-Reseñas][resenas] | [#11][issue11] | Pendiente de verificación en workstation |
-| I4 | Catálogo | Reseñas | `GET /api/catalogo/eventos/{id}/info-servicio` | [Reseñas-Catálogo][resenas_catalogo] | [#13][issue13] | Contrato propuesto; pendiente de formalización y verificación en workstation |
+| I4 | Catálogo | Reseñas | `GET /api/catalogo/eventos/{id}/info-servicio` | [Reseñas-Catálogo][resenas_catalogo] | [#13][issue13] | Pendiente de verificación en workstation |
+
 
 [panel]: https://github.com/Equipo-7-Catalogo-de-eventos/Catalogo_de_eventos/blob/main/docs/CONTRATO_CATALOGO_PANEL.md
 [entradas]: https://github.com/Equipo-7-Catalogo-de-eventos/Catalogo_de_eventos/blob/main/docs/CONTRATO_ENTRADAS_CATALOGO.md
