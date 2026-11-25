@@ -1,0 +1,61 @@
+﻿
+> catalogo-eventos-backend@1.0.0 test
+> node --test test/fechas.test.js test/api.test.js
+
+Ôùç injected env (3) from .env // tip: Ôîÿ suppress logs { quiet: true }
+Ôùç injected env (0) from .env // tip: Ôîÿ enable debugging { debug: true }
+[BE2] Panel Organizador no disponible para eventos pr├│ximos (The operation was aborted due to timeout).
+[BE2] Rese├▒as no disponible para calificaciones b├ísicas (fetch failed). Preservando m├®tricas locales.
+Ô£ö GET /health responde que el servicio est├í operativo (1948.2343ms)
+[BE2] Rese├▒as no disponible para calificaciones b├ísicas (fetch failed). Preservando m├®tricas locales.
+Ô£ö HU1: el listado entrega eventos con los campos que usa el front (195.6733ms)
+[BE2] Rese├▒as no disponible para calificaciones b├ísicas (fetch failed). Preservando m├®tricas locales.
+Ô£ö HU3: la paginaci├│n respeta el l├¡mite y entrega sus metadatos (203.2361ms)
+[BE2] Rese├▒as no disponible para calificaciones b├ísicas (fetch failed). Preservando m├®tricas locales.
+[BE2] Rese├▒as no disponible para calificaciones b├ísicas (fetch failed). Preservando m├®tricas locales.
+Ô£ö HU3: la segunda p├ígina tambi├®n respeta el l├¡mite y no excede el total (414.1021ms)
+[BE2] Rese├▒as no disponible para calificaciones b├ísicas (fetch failed). Preservando m├®tricas locales.
+Ô£ö HU3: el filtro de pr├│ximos no incluye eventos pasados (192.3119ms)
+[BE2] Rese├▒as no disponible para calificaciones b├ísicas (fetch failed). Preservando m├®tricas locales.
+Ô£ö HU3: el filtro de pasados solo incluye eventos pasados (268.3667ms)
+[BE2] Rese├▒as no disponible para calificaciones b├ísicas (fetch failed). Preservando m├®tricas locales.
+Ô£ö HU3: el filtro de gratuitos solo incluye eventos gratuitos (224.7167ms)
+Ô£ö HU3: un valor inv├ílido de isFree responde 400 (9.7696ms)
+Ô£ö HU3: una fecha inv├ílida en fecha_desde responde 400 y no 500 (15.7091ms)
+[BE2] Rese├▒as no disponible para calificaciones b├ísicas (fetch failed). Preservando m├®tricas locales.
+Ô£ö HU2: la b├║squeda por nombre encuentra el evento buscado (203.9065ms)
+[BE2] Rese├▒as no disponible para evento 6b05851901bbdc138427b5d2 (fetch failed). Mostrando fallback.
+Ô£ö HU4: el detalle de un evento existente responde 200 con su informaci├│n (229.2071ms)
+Ô£ö HU4: el detalle de un evento inexistente responde 404 (212.9367ms)
+[BE2] Rese├▒as no disponible para evento 6b05851901bbdc138427b5d2 (fetch failed). Mostrando fallback.
+Ô£ö HU6: si Rese├▒as no responde, el cat├ílogo entrega igual la informaci├│n del evento (202.5461ms)
+Ô£ö BE3 (Promociones): GET /:id/precio entrega el precio del evento (186.2702ms)
+Ô£ö BE3 (Promociones): el precio de un evento inexistente responde 404 (193.3755ms)
+Ô£ö BE3 (Rese├▒as): GET /:id/info-servicio entrega identificador y nombre del evento (209.8149ms)
+Ô£ö BE3 (Rese├▒as): info-servicio de un evento inexistente responde 404 (192.5455ms)
+Ô£ö HU5: actualizar stock sin token de sesi├│n responde 401 (36.8539ms)
+Ô£ö HU5: un stock negativo responde 400 (11.6345ms)
+Ô£ö HU5: un stock no entero responde 400 (3.5388ms)
+Ô£ö HU5: actualizar el stock de un evento inexistente no responde 200 (194.4791ms)
+[BE2] Rese├▒as no disponible para evento 6b05851901bbdc138427b5d2 (fetch failed). Mostrando fallback.
+Ô£ö HU5: actualizar con un stock v├ílido responde 200 y conserva el estado coherente (708.1268ms)
+Ô£ö Panel: registrar un evento sin nombre responde 400 (2.8284ms)
+Ô£ö Panel: registrar un evento con fecha inv├ílida responde 400 (4.675ms)
+Ô£ö CORS: en acceso directo se responde con el origen de la solicitud (2.4292ms)
+Ô£ö CORS: si la solicitud viene del API Gateway, el cat├ílogo no agrega cabeceras propias (12.4046ms)
+Ô£ö un evento de ma├▒ana no es pasado a las 21:19 del d├¡a anterior (hora de Chile) (39.5667ms)
+Ô£ö el evento sigue vigente un minuto antes de su hora de inicio (0.351ms)
+Ô£ö el evento pasa a ser pasado un minuto despu├®s de su hora de inicio (0.2131ms)
+Ô£ö fecha + hora se convierten al instante correcto en hora de Chile (UTC-3 en verano) (0.2802ms)
+Ô£ö sin hora conocida, el evento se considera vigente hasta el final del d├¡a (0.7007ms)
+Ô£ö un evento de meses atr├ís es pasado (0.2499ms)
+Ô£ö una fecha inv├ílida no marca el evento como pasado (0.0884ms)
+Ô£ö hoyEnZona entrega el d├¡a calendario de Chile, no el de UTC (1.1233ms)
+Ôä╣ tests 34
+Ôä╣ suites 0
+Ôä╣ pass 34
+Ôä╣ fail 0
+Ôä╣ cancelled 0
+Ôä╣ skipped 0
+Ôä╣ todo 0
+Ôä╣ duration_ms 10691.9473
