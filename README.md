@@ -2,9 +2,10 @@
 
 Microservicio backend RESTful desarrollado en **Node.js** y **Express**, encargado de la consulta, búsqueda multivariable, filtros avanzados y vista de detalle de eventos, sincronizado con base de datos PostgreSQL alojada en **Supabase**.
 
-> **Documentación General y Contratos:**  
-> Los contratos de interfaz interservicios, diagramas de secuencia e hitos de planificación se encuentran en el repositorio principal:  
-> **[Equipo-7-Catalogo-de-eventos / Catalogo_de_eventos](https://github.com/Equipo-7-Catalogo-de-eventos/Catalogo_de_eventos)**
+
+> **Documentación general y contratos:**  
+> [Equipo-7-Catalogo-de-eventos / Catalogo_de_eventos](https://github.com/Equipo-7-Catalogo-de-eventos/Catalogo_de_eventos)
+
 
 ---
 
@@ -21,8 +22,11 @@ Microservicio backend RESTful desarrollado en **Node.js** y **Express**, encarga
 * **Integración Interservicios Resiliente (BE2):**
   * Comunicación con microservicio de **Reseñas** para calificaciones básicas y opiniones detalladas con SLA < 500ms y *Graceful Degradation* (fallback automático a "Sin calificaciones aún" si Reseñas no responde).
   * Comunicación con **Panel Organizador** para carga de eventos.
-* **Servicio para Otros Módulos (BE3):**
-  * Endpoint `GET /api/catalogo/eventos/:id/info-servicio` para entregar ID y nombre a Reseñas, y precio a Promociones.
+
+* **Servicios para otros módulos (BE3):**
+  * `GET /api/catalogo/eventos/:id/info-servicio`: proporciona información del evento a Reseñas.
+  * `GET /api/catalogo/eventos/:id/precio`: proporciona información del precio a Promociones.
+
 * **Sincronización de Stock con Entradas (Contrato oficial):**
   * Endpoint `PUT /api/catalogo/eventos/:id/stock` que valida `nuevo_stock` y `token_sesion`, actualizando automáticamente el estado a `agotado` si el stock llega a 0.
 * **Dockerización Compartida:** Configurado para conectarse a la red común Docker `plataforma-eventos-net`.
@@ -44,7 +48,7 @@ ms-catalogo-eventos/
 │   ├── services/
 │   │   └── externalServices.js     # Integración HTTP con otros microservicios (BE2)
 │   └── index.js                    # Entrada de servidor Express y Swagger UI
-├── Dockerfile                      # Contenedor Node 20 Alpine
+├── Dockerfile                      # Contenedor Node 22 Alpine
 ├── docker-compose.yml              # Despliegue con red plataforma-eventos-net
 ├── .env.example                    # Plantilla de variables de entorno (puerto 4000)
 ├── .gitignore                      # Exclusiones de Git
@@ -109,22 +113,34 @@ docker network create plataforma-eventos-net 2>/dev/null || true
 docker compose up -d --build
 ```
 
-El servicio se registra en la red con el nombre de contenedor `ms-catalogo-eventos` y el alias de red `catalogo-service` en el puerto `4000`.
+
+El contenedor `ms-catalogo-eventos` utiliza el alias de red `catalogo-service`, con puerto interno `3000` y puerto externo `4000`.
+
 
 ---
 
-## Endpoints Principales
+
+## Endpoints principales
 
 | Método | Endpoint | Descripción |
-| :---: | :--- | :--- |
-| `GET` | `/health` | Chequeo de salud del servicio |
-| `GET` | `/api-docs` | Documentación interactiva Swagger OpenAPI 3.0 |
-| `GET` | `/api/catalogo/eventos` | Listar eventos con filtros avanzados, búsqueda multivariable y paginación |
-| `GET` | `/api/catalogo/eventos/:id` | Detalle completo del evento y campo calculado `es_pasado` |
-| `GET` | `/api/catalogo/eventos/:id/resenas` | Consulta de estrellas y opiniones a Reseñas con fallback seguro |
-| `GET` | `/api/catalogo/eventos/:id/info-servicio` | Datos mínimos para microservicios de Reseñas y Promociones (BE3) |
-| `PUT` | `/api/catalogo/eventos/:id/stock` | Actualizar stock desde Entradas/Inventario (conforme a contrato) |
+| --- | --- | --- |
+| GET | `/health` | Estado del servicio |
+| GET | `/api-docs` | Documentación Swagger |
+| GET | `/api/catalogo/eventos` | Listado, búsqueda, filtrado y paginación de eventos |
+| GET | `/api/catalogo/eventos/:id` | Detalle del evento |
+| GET | `/api/catalogo/eventos/:id/resenas` | Consulta de calificaciones y reseñas |
+| GET | `/api/catalogo/eventos/:id/info-servicio` | Información del evento para Reseñas |
+| GET | `/api/catalogo/eventos/:id/precio` | Consulta del precio para Promociones |
+| POST | `/api/catalogo/eventos` | Registro de eventos |
+| PATCH | `/api/catalogo/eventos/:id/estado` | Actualización del estado del evento |
+| PUT | `/api/catalogo/eventos/:id/stock` | Actualización de stock desde Entradas/Inventario |
+| PATCH | `/api/catalogo/eventos/:id/stock` | Ruta alternativa de actualización de stock |
 
-Para ver el detalle completo de las pruebas, capturas y respuestas HTTP de integración, consultar:  
-👉 **[Guía y Evidencias de Integración (docs/EVIDENCIAS_INTEGRACION.md)](docs/EVIDENCIAS_INTEGRACION.md)**
+
+## Documentación
+
+- [Integraciones](INTEGRACIONES.md)
+- [Responsables](RESPONSABLES.md)
+- [Evidencias de integración](docs/EVIDENCIAS_INTEGRACION.md)
+
 
