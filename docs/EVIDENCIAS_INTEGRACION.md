@@ -247,3 +247,36 @@ docker exec auditoria-promociones-api node -e "fetch('http://catalogo-service:30
 ![Precio consultado desde el contenedor de Promociones](evidencias/03_precio_desde_promociones.png)
 
 Pendiente de la contraparte: Promociones tiene configurado `CATALOGO_SERVICE_URL=http://ticketu-catalogo:4001`, que no existe en la red. El valor correcto es `http://catalogo-service:3000/api/catalogo`.
+
+
+---
+
+## 6. Pruebas de integración ejecutadas en workstation (CA2)
+
+**Colección:** [Pruebas_Integracion_Catalogo_E4.postman_collection.json](Pruebas_Integracion_Catalogo_E4.postman_collection.json)
+**Ejecución:** en workstation, con Newman (Postman por línea de comandos) contra el API Gateway y los módulos reales:
+
+```powershell
+docker run --rm -v "${PWD}\docs:/etc/newman" postman/newman:6-alpine run Pruebas_Integracion_Catalogo_E4.postman_collection.json --env-var baseUrl=http://host.docker.internal:8080
+```
+
+**Resultado:** 17 solicitudes, 40 verificaciones, 0 fallas.
+
+| Integración | Caso exitoso | Casos de error |
+| --- | --- | --- |
+| I1 Panel Organizador → Catálogo | Panel entrega sus eventos publicados; Catálogo los lista | Evento inexistente en Panel (404); fecha inválida (400) |
+| I2 Entradas/Inventario → Catálogo | Actualización de stock (200, stock y estado coherentes) | Sin token (401); stock negativo (400); evento inexistente (404) |
+| I3 Reseñas → Catálogo | Reseñas responde; Catálogo entrega calificación y reseñas | Evento inexistente (404) |
+| I4 Catálogo → Reseñas (info-servicio) | Identificador y nombre del evento | Evento inexistente (404) |
+| I5 Catálogo → Promociones (precio) | Precio igual al del catálogo | Evento inexistente (404) |
+
+![Ejecución: infraestructura, I1 e inicio de I2](evidencias/postman2.png)
+![Ejecución: I2 e I3](evidencias/postman3.png)
+![Ejecución: I3, I4 e I5](evidencias/postman4.png)
+![Resumen: 17 solicitudes, 40 verificaciones, 0 fallas](evidencias/postman5.png)
+
+### Swagger en workstation
+
+`http://localhost:4000/api-docs` documenta los servicios propios y los requeridos por otros módulos (`/precio`, `/info-servicio`, `/stock`, `/estado`, `/resenas`).
+
+![Swagger en workstation](evidencias/04_swagger.png)
