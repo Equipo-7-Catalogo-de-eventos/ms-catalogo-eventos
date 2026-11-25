@@ -4,7 +4,11 @@
 Microservicio backend RESTful desarrollado en **Node.js** y **Express**, encargado del listado, búsqueda, filtrado y consulta de eventos, con persistencia en PostgreSQL mediante **Supabase**.
 
 > **Repositorio principal, documentación y contratos:**  
-> [Catalogo_de_eventos](https://github.com/Equipo-7-Catalogo-de-eventos/Catalogo_de_eventos)
+> [Catalogo_de_eventos](https://github.com/Equipo-7-Catalogo-de-eventos/Catalogo_de_eventos)  
+> **Planificación, historias de usuario e ítems de integración:**  
+> [Issues de Catalogo_de_eventos](https://github.com/Equipo-7-Catalogo-de-eventos/Catalogo_de_eventos/issues)  
+> **Front End del módulo (repositorio común de la plataforma):**  
+> [FWizav/FrontendTitec](https://github.com/FWizav/FrontendTitec), carpeta `src/modules/catalogo`
 
 ---
 
@@ -44,6 +48,8 @@ ms-catalogo-eventos/
 │   │   └── eventRoutes.js
 │   ├── services/
 │   │   └── externalServices.js
+│   ├── utils/
+│   │   └── fechas.js             # Cálculo de es_pasado (fecha + hora, America/Santiago)
 │   └── index.js
 ├── Dockerfile                    # Node 22 Alpine
 ├── docker-compose.yml
@@ -133,6 +139,35 @@ docker compose up -d --build
 | Red Docker | `plataforma-eventos-net` |
 | Puerto interno | `3000` |
 | Puerto externo | `4000` |
+
+Para actualizar una instalación existente: `git pull` y luego `docker compose up -d --build`. Si Docker indica que el nombre `ms-catalogo-eventos` ya está en uso, ejecutar `docker rm -f ms-catalogo-eventos` y repetir el comando (el contenedor no guarda datos; los eventos están en Supabase).
+
+---
+
+## Instalación en workstation
+
+| Recurso | Dirección |
+| --- | --- |
+| Catálogo vía API Gateway | `http://localhost:8080/api/catalogo/eventos` |
+| Catálogo directo | `http://localhost:4000/api/catalogo/eventos` |
+| Swagger | `http://localhost:4000/api-docs` |
+| Front End (módulo Catálogo) | `http://localhost:3000/catalogo` |
+| Variable en el API Gateway | `CATALOGO_SERVICE_URL=http://catalogo-service:3000` |
+
+### Usuario de prueba
+
+Las consultas del catálogo son públicas. Para recorrer el flujo de reserva de entradas desde el detalle de un evento se usa esta cuenta de Auth:
+
+| Correo | Contraseña |
+| --- | --- |
+| `catalogo@uv.cl` | `catalogo` |
+
+### Flujo principal para revisar el módulo
+
+1. Abrir el front y entrar a **Catálogo**: se listan los eventos publicados por Panel Organizador.
+2. Buscar por nombre, aplicar filtros y cambiar de página.
+3. Abrir un evento: detalle, precio, stock informado por Entradas y reseñas.
+4. Iniciar sesión con el usuario de prueba y reservar una entrada: Entradas actualiza el stock del catálogo, visible en `http://localhost:8080/api/catalogo/eventos/{id}` (campo `stock_actual`).
 
 ---
 

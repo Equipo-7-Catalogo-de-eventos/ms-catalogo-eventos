@@ -2,8 +2,8 @@
 
 **Módulo:** Catálogo de Eventos  
 **Equipo:** Equipo 7  
-**Entrega:** Sprint 2 - Integración de Microservicios  
-**Asignatura:** Arquitectura de Software / Plataforma de Eventos  
+**Entrega:** Evaluación 4 - Entrega integrada en workstation (antecedentes de la Evaluación 2 en las secciones 1 a 4)  
+**Asignatura:** Taller de Integración Tecnológica / Plataforma de Eventos  
 
 ---
 
@@ -22,12 +22,12 @@
 
 ## 2. Cumplimiento de los 6 Pasos de Integración
 
-### ✅ Paso 1: Levantar su servicio
-* **Dockerfile:** Imagen ligera basada en `node:20-alpine`.
-* **Puerto:** Expone el puerto `4000` (`EXPOSE 4000`), evitando colisiones con frontends (3000) u otros microservicios.
+### Paso 1: Levantar su servicio
+* **Dockerfile:** Imagen ligera basada en `node:22-alpine`.
+* **Puerto:** Expone el puerto interno `3000` (`EXPOSE 3000`), publicado en el host como `4000` para evitar colisiones con el front (3000).
 * **Comando de arranque:** `CMD ["node", "src/index.js"]`.
 
-### ✅ Paso 2: Compartir red (`plataforma-eventos-net`)
+### Paso 2: Compartir red (`plataforma-eventos-net`)
 El servicio se conecta a la red compartida definida por la cátedra mediante `docker-compose.yml`:
 ```yaml
 services:
@@ -35,7 +35,7 @@ services:
     build: .
     container_name: ms-catalogo-eventos
     ports:
-      - "4000:4000"
+      - "4000:3000"
     networks:
       - plataforma-eventos-net
 
@@ -52,7 +52,7 @@ networks:
   docker compose up --build -d
   ```
 
-### ✅ Paso 3: Respetar rutas (`/api/<modulo>/...` y OpenAPI)
+### Paso 3: Respetar rutas (`/api/<modulo>/...` y OpenAPI)
 * Todos los endpoints de Catálogo de Eventos responden bajo el prefijo reglamentario:
   * `GET /api/catalogo/eventos`
   * `GET /api/catalogo/eventos/:id`
@@ -61,7 +61,7 @@ networks:
   * `GET /api/catalogo/eventos/:id/info-servicio`
 * **Swagger OpenAPI:** Disponible localmente en `http://localhost:4000/api-docs` con esquema JSON descargable en `/docs/swagger.json`.
 
-### ✅ Paso 4: Registrar destino (`*_SERVICE_URL`)
+### Paso 4: Registrar destino (`*_SERVICE_URL`)
 * **Variable que expone Catálogo para el Gateway:**
   ```env
   CATALOGO_SERVICE_URL=http://catalogo-service:3000
@@ -74,7 +74,7 @@ networks:
   EXTERNAL_TIMEOUT_MS=500
   ```
 
-### ✅ Paso 5: Acordar eventos y contratos (1 Servicio Provisto + 1 Servicio Consumido)
+### Paso 5: Acordar eventos y contratos (1 Servicio Provisto + 1 Servicio Consumido)
 
 El microservicio cumple con la directriz del profesor René de proveer y consumir servicios acordados:
 
@@ -198,3 +198,52 @@ curl -X GET http://localhost:4000/api/catalogo/eventos/evt-101/resenas?limite=3
 4. Comprobar que el servicio responde y ver Swagger interactivo:
    * **API:** `curl http://localhost:4000/api/catalogo/eventos`
    * **Swagger:** Abrir en el navegador `http://localhost:4000/api-docs`
+
+---
+
+## 5. Verificación en workstation (Evaluación 4)
+
+**Fecha:** 24-11-2026, sobre la versión de la rama `main` instalada en workstation.
+
+| Parámetro | Valor en workstation |
+| --- | --- |
+| Contenedor | `ms-catalogo-eventos` (`0.0.0.0:4000->3000/tcp`) |
+| Ruta por el API Gateway | `http://localhost:8080/api/catalogo/eventos` |
+| Alias en la red | `catalogo-service` |
+| Base de datos | Supabase, tabla `eventos` |
+
+**Preparación de datos:** se eliminaron de la tabla `eventos` los eventos de ejemplo que no provenían de Panel Organizador, para que el catálogo muestre los mismos eventos que conoce Entradas. Antes se respaldó la tabla en `eventos_respaldo`.
+
+### I1 - Panel Organizador hacia Catálogo
+
+`GET http://localhost:8080/api/catalogo/eventos` responde con los eventos publicados por Panel Organizador (identificadores de 24 caracteres, por ejemplo `6b05851901bbdc138427b5d2`). Los logs no registran fallas de conexión con Panel.
+
+![Catálogo por el API Gateway](evidencias/01_gateway_catalogo.png)
+
+### I2 - Entradas/Inventario hacia Catálogo
+
+1. `GET http://localhost:8080/api/catalogo/eventos/6b05851901bbdc138427b5d2` mostraba `stock_actual: 100`.
+2. Se reservó 1 entrada del evento TestRN desde el módulo Entradas, con el usuario de prueba de Auth.
+3. La misma consulta mostró `stock_actual: 8`. Entradas invocó `PUT /stock` y el dato quedó guardado en Supabase.
+
+Entradas informa el stock al reservar. Pagos no estaba operativo durante la verificación, por lo que no se probó una compra completa.
+
+### I3 - Reseñas hacia Catálogo
+
+`GET http://localhost:8080/api/catalogo/eventos/6b05ebb001bbdc138427b5da/resenas` respondió con los datos de Reseñas (`total_resenas: 0`, "Sin calificaciones aún") y sin avisos de "Reseñas no disponible" en los logs. El evento no tiene reseñas porque Reseñas exige check-in previo.
+
+### I5 - Catálogo hacia Promociones
+
+Por el API Gateway, `GET http://localhost:8080/api/catalogo/eventos/6b05ebb001bbdc138427b5da/precio` responde `precio_base: 10000`:
+
+![Precio por el API Gateway](evidencias/02_precio_gateway.png)
+
+Desde el contenedor de Promociones, la URL interna del catálogo responde el mismo resultado, lo que confirma que la red entre ambos módulos funciona:
+
+```powershell
+docker exec auditoria-promociones-api node -e "fetch('http://catalogo-service:3000/api/catalogo/eventos/6b05ebb001bbdc138427b5da/precio').then(r=>r.text()).then(console.log).catch(e=>console.log('ERROR',e.message))"
+```
+
+![Precio consultado desde el contenedor de Promociones](evidencias/03_precio_desde_promociones.png)
+
+Pendiente de la contraparte: Promociones tiene configurado `CATALOGO_SERVICE_URL=http://ticketu-catalogo:4001`, que no existe en la red. El valor correcto es `http://catalogo-service:3000/api/catalogo`.
