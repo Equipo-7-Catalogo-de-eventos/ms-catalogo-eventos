@@ -5,6 +5,8 @@
  * tests de integracion nunca fallen.
  */
 
+const { esEventoPasado } = require('../utils/fechas');
+
 const INITIAL_EVENTS = [
   {
     id_evento: 'evt-101',
@@ -308,11 +310,10 @@ class EventStore {
       result = result.filter(e => e.tipo_evento === expectedType);
     }
 
-    const now = new Date();
     if (temporalidad === 'proximos') {
-      result = result.filter(e => new Date(e.fecha_evento) >= now);
+      result = result.filter(e => !esEventoPasado(e.fecha_evento, e.hora_evento));
     } else if (temporalidad === 'pasados') {
-      result = result.filter(e => new Date(e.fecha_evento) < now);
+      result = result.filter(e => esEventoPasado(e.fecha_evento, e.hora_evento));
     }
 
     if (fecha_desde) {

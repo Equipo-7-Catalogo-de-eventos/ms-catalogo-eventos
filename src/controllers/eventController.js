@@ -5,6 +5,7 @@ const {
   consultarResenasEvento,
   consultarEventosProximosOrganizador
 } = require('../services/externalServices');
+const { esEventoPasado, hoyEnZona } = require('../utils/fechas');
 
 // Mapeo oficial de campos de Panel Organizador a Catálogo (CONTRATO_PANEL_CATALOGO.md)
 function mapearEventoPanel(evPanel) {
@@ -171,11 +172,13 @@ const getEvents = async (req, res) => {
     }
 
     // 4. Filtro por temporalidad (columna fecha_evento TIMESTAMP WITH TIME ZONE)
-    const nowIso = new Date().toISOString();
+    // fecha_evento guarda el día calendario (medianoche UTC); la hora exacta se evalúa después
+    // con esEventoPasado (fecha + hora_evento en hora de Chile).
+    const hoy = hoyEnZona();
     if (temporalidad === 'proximos') {
-      query = query.gte('fecha_evento', nowIso);
+      query = query.gte('fecha_evento', `${hoy}T00:00:00Z`);
     } else if (temporalidad === 'pasados') {
-      query = query.lt('fecha_evento', nowIso);
+      query = query.lte('fecha_evento', `${hoy}T23:59:59Z`);
     }
 
     // 5. Filtro por rango de fechas específico (validación estricta para responder 400 en fechas inválidas)
@@ -238,9 +241,27 @@ const getEvents = async (req, res) => {
       data = resQuery.data || [];
       count = resQuery.count;
 
-      // Fusionar eventos de Panel que estén en memoria si la búsqueda o listado aplica
+      // Fusionar SOLO eventos de Panel que quedaron en memoria y no alcanzaron a persistirse en Supabase.
+      // Los que ya están en la BD salen en su página correspondiente; agregarlos aquí duplicaba eventos
+      // en todas las páginas, ignoraba los filtros y hacía que count superara el límite.
       const idsExistentes = new Set(data.map(e => e.id_evento));
-      const eventosPanelMemoria = eventStore.events.filter(e => !idsExistentes.has(e.id_evento) && !e.id_evento.startsWith('evt-1'));
+      let eventosPanelMemoria = page === 1
+        ? eventStore.events.filter(e => e.id_evento && !idsExistentes.has(e.id_evento) && !e.id_evento.startsWith('evt-1'))
+        : [];
+      if (eventosPanelMemoria.length > 0) {
+        try {
+          const resEnBD = await withTimeout(
+            supabase.from('eventos').select('id_evento').in('id_evento', eventosPanelMemoria.map(e => e.id_evento)),
+            1500
+          );
+          if (!resEnBD.error && Array.isArray(resEnBD.data)) {
+            const enBD = new Set(resEnBD.data.map(e => e.id_evento));
+            eventosPanelMemoria = eventosPanelMemoria.filter(e => !enBD.has(e.id_evento));
+          }
+        } catch (e) {
+          // Si no se puede verificar, se mantiene el comportamiento de respaldo
+        }
+      }
       if (eventosPanelMemoria.length > 0) {
         // Filtrar según término de búsqueda si existe
         const term = (searchTerm || '').toLowerCase();
@@ -296,7 +317,11 @@ const getEvents = async (req, res) => {
         ? Number(califExt.total_resenas)
         : dbTotal;
 
-      const esPasado = fechaEvento < now;
+      const esPasado = esEventoPasado(
+        evento.fecha_evento || evento.evento_fecha,
+        evento.hora_evento || evento.evento_hora,
+        now
+      );
 
       const id = evento.id_evento || evento.evento_id;
       const nombre = evento.nombre_evento || evento.evento_titulo;
@@ -349,19 +374,27 @@ const getEvents = async (req, res) => {
       };
     });
 
-    const totalCount = count !== null ? count : formattedEvents.length;
+    // Ajuste fino de temporalidad para eventos de hoy (la consulta solo filtra por día)
+    let eventosRespuesta = formattedEvents;
+    if (temporalidad === 'proximos') {
+      eventosRespuesta = formattedEvents.filter(e => !e.es_pasado);
+    } else if (temporalidad === 'pasados') {
+      eventosRespuesta = formattedEvents.filter(e => e.es_pasado);
+    }
+    const descartados = formattedEvents.length - eventosRespuesta.length;
+    const totalCount = Math.max(0, (count !== null && count !== undefined ? count : formattedEvents.length) - descartados);
     const totalPages = Math.ceil(totalCount / limit) || 1;
 
     return res.status(200).json({
       success: true,
-      count: formattedEvents.length,
+      count: eventosRespuesta.length,
       pagination: {
         total: totalCount,
         pagina: page,
         limite: limit,
         total_paginas: totalPages
       },
-      data: formattedEvents
+      data: eventosRespuesta
     });
   } catch (error) {
     return res.status(500).json({
@@ -415,7 +448,7 @@ const getEventById = async (req, res) => {
 
     const eventId = data.id_evento || data.evento_id;
     const fecha = data.fecha_evento || data.evento_fecha;
-    const es_pasado = new Date(fecha) < new Date();
+    const es_pasado = esEventoPasado(fecha, data.hora_evento || data.evento_hora);
 
     const dbPromedio = data.promedio_calificacion !== undefined && data.promedio_calificacion !== null
       ? Number(data.promedio_calificacion)

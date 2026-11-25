@@ -220,6 +220,79 @@ const swaggerDocument = {
         }
       }
     },
+    '/api/catalogo/eventos/{id}/precio': {
+      get: {
+        summary: 'Consultar precio de un evento (servicio para Promociones, BE3)',
+        description: 'Entrega el precio vigente del evento para que Promociones calcule descuentos. Consulta Supabase y usa el catálogo local como respaldo.',
+        parameters: [
+          { name: 'id', in: 'path', required: true, description: 'Identificador del evento (ej. evt-101)', schema: { type: 'string' } }
+        ],
+        responses: {
+          200: {
+            description: 'Precio del evento',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    success: { type: 'boolean', example: true },
+                    id_evento: { type: 'string', example: 'evt-101' },
+                    precio_base: { type: 'number', example: 5000 },
+                    precio_final: { type: 'number', example: 5000 },
+                    precio_final_evento: { type: 'number', example: 5000 },
+                    tipo_evento: { type: 'string', example: 'pagado' },
+                    estado_evento: { type: 'string', example: 'disponible' }
+                  }
+                }
+              }
+            }
+          },
+          404: { description: 'Evento no encontrado' },
+          500: { description: 'Error interno al consultar precio' }
+        }
+      }
+    },
+    '/api/catalogo/eventos/{id}/resenas': {
+      get: {
+        summary: 'Consultar calificación y opiniones de un evento (consume Reseñas, BE2)',
+        description: 'Combina las métricas guardadas en Catálogo con las opiniones obtenidas del microservicio de Reseñas. Si Reseñas no responde dentro del SLA (500 ms), entrega las métricas locales.',
+        parameters: [
+          { name: 'id', in: 'path', required: true, schema: { type: 'string' } }
+        ],
+        responses: {
+          200: { description: 'Calificación promedio, total de reseñas y opiniones del evento' },
+          404: { description: 'Evento no encontrado' },
+          500: { description: 'Error interno' }
+        }
+      }
+    },
+    '/api/catalogo/eventos/{id}/estado': {
+      patch: {
+        summary: 'Cambiar estado de un evento (servicio para Panel Organizador, BE3)',
+        description: 'Permite a Panel Organizador cancelar, cerrar o finalizar un evento publicado.',
+        parameters: [
+          { name: 'id', in: 'path', required: true, schema: { type: 'string' } }
+        ],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  estado_evento: { type: 'string', example: 'cancelado', description: 'Nuevo estado (ej. cancelado, finalizado, disponible). Alias aceptado: estado' }
+                }
+              }
+            }
+          }
+        },
+        responses: {
+          200: { description: 'Estado actualizado' },
+          404: { description: 'Evento no encontrado' },
+          500: { description: 'Error al actualizar el estado' }
+        }
+      }
+    },
     '/api/catalogo/eventos/{id}/info-servicio': {
       get: {
         summary: 'Consultar información ligera para otros microservicios (BE3)',
