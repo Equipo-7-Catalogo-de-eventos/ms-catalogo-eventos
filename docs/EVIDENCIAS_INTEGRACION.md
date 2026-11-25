@@ -246,8 +246,7 @@ docker exec auditoria-promociones-api node -e "fetch('http://catalogo-service:30
 
 ![Precio consultado desde el contenedor de Promociones](evidencias/03_precio_desde_promociones.png)
 
-Pendiente de la contraparte: Promociones tiene configurado `CATALOGO_SERVICE_URL=http://ticketu-catalogo:4001`, que no existe en la red. El valor correcto es `http://catalogo-service:3000/api/catalogo`.
-
+Estado: el servicio del catálogo funciona y es alcanzable desde Promociones. El equipo Promociones obtiene el precio desde Entradas, por lo que actualmente no consume este endpoint.
 
 ---
 
